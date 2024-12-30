@@ -1,0 +1,59 @@
+﻿@model IEnumerable<MVC.Models.ReceivedEmail>
+@{
+    ViewData["Title"] = "Email Dashboard";
+    Layout = "~/Views/Shared/_Layout.cshtml"; // Common layout for all views
+}
+
+
+<h1>Received Emails</h1>
+
+@if (Model == null || !Model.Any())
+{
+    <p>No received emails found.</p>
+}
+else
+{
+    <div class="email-list row">
+        @foreach (var email in Model)
+        {
+            <div class="email-item col-3">
+                <strong>From:</strong> @email.From <br />
+                <strong>Subject:</strong> @email.Subject <br />
+                <strong>Received Date:</strong>
+                @if (email.ReceivedDate.HasValue)
+                {
+                    @email.ReceivedDate.Value.ToString("MM/dd/yyyy")
+                }
+                else
+                {
+                    <span>N/A</span>
+                }
+                <br />
+                <button onclick="deleteEmail(@email.Id)">Delete</button>
+            </div>
+        }
+    </div>
+}
+
+<script>
+    function deleteEmail(emailId) {
+        if (confirm("Are you sure you want to delete this email?")) {
+            fetch(`/Email/DeleteReceivedEmail/${emailId}`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message || "Email deleted successfully!");
+                    location.reload(); // Reload the page to update the list
+                } else {
+                    alert(data.message || "Failed to delete email.");
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("An error occurred while deleting the email.");
+            });
+        }
+    }
+</script>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+
+    <!-- Link to CSS -->
+    <link rel="stylesheet" href="/Css/AdminPanel.css">
+
+    <!-- Font Awesome for Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <h1><i class="fas fa-cogs"></i> Admin Panel</h1>
+        <p>Manage users, projects, and KPI metrics efficiently.</p>
+    </header>
+
+    <main class="admin-panel">
+        <!-- Users Section -->
+        <section class="users-section">
+            <h2><i class="fas fa-users"></i> Users and KPI</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>KPI Points</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>John Doe</td>
+                        <td>johndoe@example.com</td>
+                        <td>85</td>
+                        <td>
+                            <button onclick="resetKPI(1)" class="action-btn reset-btn">
+                                <i class="fas fa-redo-alt"></i> Reset KPI
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Jane Smith</td>
+                        <td>janesmith@example.com</td>
+                        <td>90</td>
+                        <td>
+                            <button onclick="resetKPI(2)" class="action-btn reset-btn">
+                                <i class="fas fa-redo-alt"></i> Reset KPI
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Projects Section -->
+        <section class="projects-section">
+            <h2><i class="fas fa-project-diagram"></i> Add New Project</h2>
+            <form id="addProjectForm" method="post" action="/Admin/AddProject">
+                <div>
+                    <label for="name">Project Name:</label>
+                    <input type="text" id="name" name="Name" required />
+                </div>
+                <div>
+                    <label for="deadline">Deadline:</label>
+                    <input type="date" id="deadline" name="Deadline" required />
+                </div>
+                <div>
+                    <label for="description">Description:</label>
+                    <textarea id="description" name="Description"></textarea>
+                </div>
+                <button type="submit" class="action-btn add-btn">
+                    <i class="fas fa-plus-circle"></i> Add Project
+                </button>
+            </form>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Admin Panel. All rights reserved.</p>
+    </footer>
+
+    <!-- Link to JavaScript -->
+    <script src="/Js/AdminPanel.js"></script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="author" content="Dibbeshwor Acharya">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feedback Form</title>
+
+    <link rel="stylesheet" href="/Css/feedback.css">
+    <link rel="stylesheet" href="../css/header-style.css">
+    <link rel="icon" href="../../../22067800-SakchyamThapa/logo/png/logo-no-background.png" />
+
+    <style>
+        /* Universal selector and body styles */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background-color: #f5f5f5;
+            background-image: url(../../images/feedBackbackground.jpg);
+            background-size: cover;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content middle">
+            <ul>
+                <li><a href="../../../22067800-SakchyamThapa/Code/index.html">
+                    <img src="../../logo/png/logo-white-removebg.png" alt="main logo" style="width: 150px;" id="logo-header">
+                </a></li>
+                <li class="middle-links"><a href="../../../22067800-SakchyamThapa/Code/index.html">Home</a></li>
+                <li class="middle-links"><a href="../../../22067759-RoshaniKarki/Product.html">Products</a></li>
+                <li class="middle-links"><a href="./feedPage.html">Feed</a></li>
+                <li class="middle-links"><a href="../../../22067759-RoshaniKarki/blog.html">Blog</a></li>
+                <li class="middle-links"><a href="../../../22067800-SakchyamThapa/Code/potfolio.html">About Us</a></li>
+                <li class="middle-links"><a href="./referencePage.html">References</a></li>
+                <li class="middle-links header-active"><a href="./feedbackPage.html">Feedback</a></li>
+            </ul>
+        </div>
+        <div class="header-content right">
+            <img src="../../icons/header-icons/search.svg" alt="search icon">
+            <a href="#"><img src="../../icons/header-icons/user.svg" alt="user icon"></a>
+            <a href="./cartPage.html"><img src="../../icons/header-icons/shopping-cart.svg" alt="shopping cart icon"></a>
+        </div>
+    </header>
+
+    <!-- Feedback form begins here -->
+    <section>
+        <div class="feedback-form">
+            <h2>FEEDBACK</h2>
+            <form onsubmit="formValidate();" style="text-align: center;">
+                <input type="text" id="name" name="Name" placeholder="Full Name" autofocus>
+                <br>
+                <input type="email" id="email" name="email" placeholder="Email">
+                <br>
+                <textarea id="comment" name="comment" placeholder="Tell us more" style="height: 200px;"></textarea>
+                <br>
+
+                <div class="feedback-type">
+                    <div class="feedback-checkbox">
+                        <input type="radio" id="complaint" name="feedBack-Type" value="complaint">
+                        <label for="complaint">Complaint</label>
+                    </div>
+                    <div class="feedback-checkbox">
+                        <input type="radio" id="suggestion" name="feedBack-Type" value="suggestion">
+                        <label for="suggestion">Suggestion</label>
+                    </div>
+                    <div class="feedback-checkbox">
+                        <input type="radio" id="other" name="feedBack-Type" value="other" checked>
+                        <label for="other">Other</label>
+                    </div>
+                </div>
+
+                <div class="rating">
+                    <h4 style="margin-right: 20px;">Rate Us:</h4>
+                    <button type="button" onclick="rate('meh')">
+                        <img src="../../icons/rating-meh-filled.svg" alt="rating meh" id="mehRating">
+                    </button>
+                    <button type="button" onclick="rate('smile')">
+                        <img src="../../icons/rating-smile-filled.svg" alt="rating smile" id="smileRating">
+                    </button>
+                    <button type="button" onclick="rate('happy')">
+                        <img src="../../icons/rating-happy-filled.svg" alt="rating happy" id="happyRating">
+                    </button>
+                </div>
+
+                <input type="submit" value="Submit" class="submit-button">
+            </form>
+        </div>
+    </section>
+
+    <script src="/Js/feedback.js"></script>
+</body>
+</html>

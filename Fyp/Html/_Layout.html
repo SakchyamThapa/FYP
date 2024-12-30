@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Dashboard</title>
+
+    <!-- Bootstrap 5 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h2 class="text-center text-light mb-4"><i class="fas fa-envelope"></i> Email Dashboard</h2>
+        <nav>
+            <ul>
+                <li><a href="/SendMail/Index"><i class="fas fa-paper-plane"></i> Sent Emails</a></li>
+                <li><a href="/SendMail/Compose"><i class="fas fa-edit"></i> Compose Email</a></li>
+                <li><a href="/SendMail/TrashEmails"><i class="fas fa-trash"></i> Trash</a></li>
+                <li><a href="/SendMail/Recieved"><i class="fas fa-inbox"></i> Received Emails</a></li>
+            </ul>
+        </nav>
+        <hr class="text-light">
+        <h3 class="text-light">Account</h3>
+        <nav>
+            <ul>
+                <li><a href="/SendMail/Login"><i class="fas fa-user-circle"></i> Login</a></li>
+            </ul>
+        </nav>
+        <hr class="text-light">
+        <h3 class="text-light">Management</h3>
+        <nav>
+            <ul>
+                <li><a href="/SendMail/WorkManagement"><i class="fas fa-tasks"></i> Work Management</a></li>
+                <li><a href="/SendMail/AdminPanel"><i class="fas fa-user-shield"></i> Admin Management</a></li>
+                <li><a href="/SendMail/Home"><i class="fas fa-home"></i> Dashboard Management</a></li>
+            </ul>
+        </nav>
+        <hr class="text-light">
+        <h3 class="text-light">Other</h3>
+        <nav>
+            <ul>
+                <li><a href="/SendMail/Redeem"><i class="fas fa-gift"></i> Redeem Points</a></li>
+                <li><a href="/SendMail/Invoice"><i class="fas fa-file-invoice"></i> Invoice</a></li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Content Section -->
+    <div class="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="text-primary"><i class="fas fa-cogs"></i> Email Dashboard</h1>
+            <div class="dropdown">
+                <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="fas fa-cog"></i> Settings
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="#" onclick="getAllUsers()"><i class="fas fa-users"></i> Get All Users</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="getUserById()"><i class="fas fa-user"></i> Get User by ID</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="updateUser()"><i class="fas fa-user-edit"></i> Update User</a></li>
+                    <li><a class="dropdown-item text-danger" href="#" onclick="deleteUser()"><i class="fas fa-user-slash"></i> Delete User</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Script -->
+    <script src="/js/script.js"></script>
+</body>
+</html>

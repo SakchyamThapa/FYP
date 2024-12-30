@@ -1,0 +1,116 @@
+/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f9f9f9;
+    margin: 0;
+    padding: 0;
+}
+
+/* Header */
+header {
+    text-align: center;
+    padding: 20px;
+    background-color: #007bff;
+    color: white;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 2rem;
+}
+
+header p {
+    margin: 10px 0;
+    font-size: 1.1rem;
+}
+
+/* Dashboard Layout */
+.dashboard {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 20px;
+    justify-content: center;
+}
+
+/* Project Cards */
+.project-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    width: calc(100% - 40px);
+    max-width: 300px;
+    text-align: center;
+    position: relative;
+    box-sizing: border-box;
+}
+
+.project-card h2 {
+    font-size: 1.2rem;
+    color: #333;
+    margin: 0 0 10px;
+}
+
+.project-card p {
+    font-size: 0.9rem;
+    color: #555;
+}
+
+/* Progress Bar */
+.progress-bar-container {
+    background: #e0e0e0;
+    border-radius: 10px;
+    height: 20px;
+    width: 100%;
+    overflow: hidden;
+    margin: 15px 0;
+}
+
+.progress-bar {
+    background: #4caf50;
+    height: 100%;
+    transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+/* Details Button */
+.view-details {
+    background: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 15px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.view-details:hover {
+    background: #0056b3;
+}
+
+/* No Projects Message */
+.no-projects {
+    text-align: center;
+    font-size: 1.2rem;
+    color: #666;
+}
+
+.no-projects a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.no-projects a:hover {
+    text-decoration: underline;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .dashboard {
+        flex-direction: column;
+    }
+
+    .project-card {
+        width: 100%;
+    }
+}

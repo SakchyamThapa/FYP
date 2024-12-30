@@ -1,0 +1,107 @@
+﻿/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f8f9fa;
+}
+
+header {
+    text-align: center;
+    padding: 20px;
+    background-color: #343a40;
+    color: #fff;
+}
+
+    header h1 {
+        margin: 0;
+        font-size: 1.8rem;
+    }
+
+    header p {
+        margin: 10px 0 0;
+        font-size: 1rem;
+    }
+
+/* Main Admin Panel Layout */
+.admin-panel {
+    padding: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+}
+
+/* Users Section */
+.users-section {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 600px;
+}
+
+    .users-section table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .users-section th,
+    .users-section td {
+        padding: 10px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .users-section button {
+        padding: 8px 12px;
+        background-color: #dc3545;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+        .users-section button:hover {
+            background-color: #c82333;
+        }
+
+/* Projects Section */
+.projects-section {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+}
+
+    .projects-section label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+
+    .projects-section input,
+    .projects-section textarea {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 15px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        box-sizing: border-box;
+    }
+
+    .projects-section button {
+        padding: 10px 15px;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+        .projects-section button:hover {
+            background-color: #0056b3;
+        }

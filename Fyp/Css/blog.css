@@ -1,0 +1,313 @@
+/* General Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+/* Body and General Styles */
+body {
+  background-color: #f8f8f8;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* Header Section */
+header {
+  width: 100%;
+  background: #fff;
+  border-bottom: 1px solid #ddd;
+}
+
+.whitetop {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 20px;
+  background-color: #f0f0f0;
+  font-size: 14px;
+}
+
+.arrangeleft,
+.arrangeright {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.arrangeleft div,
+.arrangeright p {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+}
+
+.arrangeright p:hover {
+  color: #0073e6;
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+}
+
+.top ul {
+  display: flex;
+  gap: 20px;
+  list-style: none;
+}
+
+.top ul a img {
+  width: 120px;
+  height: auto;
+}
+
+.top ul li {
+  display: inline-block;
+}
+
+.top ul li a {
+  text-decoration: none;
+  color: #333;
+  padding: 5px 10px;
+  font-size: 16px;
+}
+
+.top ul li.active-page a {
+  color: #0073e6;
+  font-weight: bold;
+}
+
+.icons {
+  display: flex;
+  gap: 15px;
+}
+
+.insideicon {
+  width: 25px;
+  cursor: pointer;
+}
+
+.insideicon:hover {
+  filter: brightness(1.2);
+}
+
+/* Menu Overlay */
+.menu {
+  display: none;
+  position: relative;
+  flex-direction: column;
+  background: rgba(0, 0, 0, 0.8);
+  width: 100%;
+  height: 100vh;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  justify-content: center;
+  align-items: center;
+}
+
+.menu .button p {
+  margin: 20px 0;
+  font-size: 24px;
+  color: #fff;
+  text-align: center;
+  cursor: pointer;
+}
+
+.menu .button p a {
+  color: #fff;
+  text-decoration: none;
+}
+
+/* Banner Section */
+.back {
+  position: relative;
+  width: 100%;
+}
+
+.mainimg {
+  width: 100%;
+  height: auto;
+}
+
+.title {
+  text-align: center;
+  font-size: 2.5rem;
+  margin: 30px 0;
+  color: #333;
+}
+
+/* Flip Box Section */
+.mainhover {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin: 20px 0;
+}
+
+.flip-box {
+  background-color: transparent;
+  width: 300px;
+  height: 300px;
+  perspective: 1000px;
+}
+
+.flip-box-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  transition: transform 0.8s;
+  transform-style: preserve-3d;
+}
+
+.flip-box:hover .flip-box-inner {
+  transform: rotateY(180deg);
+}
+
+.flip-box-front,
+.flip-box-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.flip-box-front {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f5f5f5;
+}
+
+.flip-box-front img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.flip-box-back {
+  background-color: #0073e6;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  padding: 20px;
+  transform: rotateY(180deg);
+}
+
+.flip-box-back h2 {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+}
+
+.flip-box-back p {
+  font-size: 1rem;
+}
+
+.flip-box-back a {
+  color: #fff;
+  text-decoration: none;
+}
+
+/* Bottom Bar Section */
+.bottombar {
+  width: 100%;
+  padding: 20px 0;
+  background-color: #f0f0f0;
+}
+
+.barmenu {
+  display: flex;
+  justify-content: space-around;
+}
+
+.insidebar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.insidebar img {
+  width: 40px;
+  margin-bottom: 10px;
+}
+
+.insidebar p {
+  font-size: 14px;
+  text-align: center;
+}
+
+/* Footer Section */
+footer {
+  display: flex;
+  justify-content: space-between;
+  background: #333;
+  color: white;
+  padding: 20px;
+}
+
+footer .footleft,
+footer .footmiddle,
+footer .footright {
+  flex: 1;
+}
+
+.footleft p {
+  margin-bottom: 10px;
+}
+
+.footlogo {
+  width: 60px;
+  margin-bottom: 10px;
+}
+
+.middlefoot p {
+  margin: 5px 0;
+}
+
+.middlefoot p a {
+  text-decoration: none;
+  color: white;
+}
+
+.footright input {
+  padding: 10px;
+  margin-bottom: 10px;
+  width: 80%;
+  border: none;
+  border-radius: 5px;
+}
+
+.footright button {
+  padding: 10px 20px;
+  background-color: #0073e6;
+  border: none;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.footright button:hover {
+  background-color: #005bb5;
+}
+
+.rightfoot img {
+  width: 30px;
+  margin: 0 5px;
+  cursor: pointer;
+}
+
+.copy {
+  text-align: center;
+  margin: 20px 0;
+  color: #555;
+}

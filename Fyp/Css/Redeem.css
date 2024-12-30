@@ -1,0 +1,184 @@
+/* Base styles */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    position: relative;
+    overflow: hidden;
+}
+
+/* User Dropdown Menu */
+.top-right-user {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 100;
+}
+
+.user-icon {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #fff;
+    outline: none;
+    transition: color 0.3s ease;
+}
+
+.user-icon:hover i {
+    color: #d0e1fd;
+}
+
+/* Redeem Container */
+.redeem-container {
+    width: 95%;
+    max-width: 1200px;
+    background: #ffffff;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    color: #333;
+    margin-top: 80px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Top Bar */
+.top-bar {
+    background: #2575fc;
+    color: #fff;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.top-bar .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.top-bar .logo img {
+    height: 50px;
+}
+
+.top-bar h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.user-points {
+    font-size: 1rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-points i {
+    font-size: 1.3rem;
+    color: gold;
+}
+
+/* Items Section */
+.items-section {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.items-section .row {
+    gap: 20px;
+}
+
+.card {
+    background: #f7f9fc;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    overflow: hidden;
+    width: 300px;
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: scale(1.05);
+}
+
+.card img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+}
+
+.card-body {
+    padding: 15px;
+    text-align: center;
+}
+
+.card-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2575fc;
+    margin-bottom: 10px;
+}
+
+.card-text {
+    color: #555;
+    margin-bottom: 15px;
+}
+
+.redeem-btn {
+    background: #2575fc;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 15px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.3s ease;
+}
+
+.redeem-btn:hover {
+    background: #1e3c72;
+}
+
+/* Mythical Item (Car) */
+.mythical-item {
+    background: #f7dd1e;
+    color: #fff;
+    border: 2px solid #61b30a;
+    box-shadow: 0 0 15px #f7e306, 0 0 30px #eff709;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        box-shadow: 0 0 15px #2575fc, 0 0 30px #2575fc;
+    }
+    50% {
+        box-shadow: 0 0 25px #2575fc, 0 0 50px #2575fc;
+    }
+}
+
+/* Pagination Section */
+.pagination-section {
+    padding: 10px 0;
+    background: #f1f5f9;
+    border-top: 1px solid #ddd;
+}
+
+.pagination .page-link {
+    color: #2575fc;
+}
+
+.pagination .page-link:hover {
+    background: #2575fc;
+    color: #fff;
+}

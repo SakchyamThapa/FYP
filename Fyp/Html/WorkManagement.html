@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Work Management</title>
+
+    <!-- Link to CSS -->
+    <link rel="stylesheet" href="/css/WorkManagement.css">
+
+    <!-- Font Awesome for Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <h1><i class="fas fa-tasks"></i> Work Management</h1>
+    </header>
+
+    <main>
+        <section class="controls">
+            <input id="new-task-input" type="text" placeholder="Enter new task..." />
+            <button id="add-task-btn"><i class="fas fa-plus-circle"></i> Add Task</button>
+        </section>
+
+        <div class="board">
+            <!-- Backlog Column -->
+            <div class="column" data-status="backlog">
+                <h3><i class="fas fa-list"></i> Backlog</h3>
+                <div class="card" draggable="true">Task 1</div>
+                <div class="card" draggable="true">Task 2</div>
+            </div>
+
+            <!-- In Progress Column -->
+            <div class="column" data-status="in-progress">
+                <h3><i class="fas fa-spinner"></i> In Progress</h3>
+                <div class="card" draggable="true">Task 3</div>
+            </div>
+
+            <!-- Review Column -->
+            <div class="column" data-status="review">
+                <h3><i class="fas fa-search"></i> Review</h3>
+                <div class="card" draggable="true">Task 5</div>
+            </div>
+
+            <!-- Completed Column -->
+            <div class="column" data-status="completed">
+                <h3><i class="fas fa-check-circle"></i> Completed</h3>
+                <div class="card" draggable="true">Task 4</div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>FYP © 2024</p>
+    </footer>
+
+    <!-- Link to JS -->
+    <script src="/js/WorkManagement.js"></script>
+</body>
+</html>

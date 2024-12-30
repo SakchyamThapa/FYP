@@ -1,0 +1,63 @@
+﻿
+@{
+    ViewData["Title"] = "Work Management";
+}
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+
+    <!-- Link to the CSS file -->
+    <link rel="stylesheet" href="~/css/WorkManagement.css" />
+</head>
+<body>
+    <header class="header">
+        <h1>Work Management</h1>
+    </header>
+
+    <main>
+        <section class="controls">
+            <input id="new-task-input" type="text" placeholder="Enter new task..." />
+            <button id="add-task-btn">Add Task</button>
+        </section>
+
+        <div class="board">
+            <!-- Backlog Column -->
+            <div class="column" data-status="backlog">
+                <h3>Backlog</h3>
+                <div class="card" draggable="true">Task 1</div>
+                <div class="card" draggable="true">Task 2</div>
+            </div>
+
+            <!-- In Progress Column -->
+            <div class="column" data-status="in-progress">
+                <h3>In Progress</h3>
+                <div class="card" draggable="true">Task 3</div>
+            </div>
+
+            <!-- Review Column -->
+            <div class="column" data-status="Review">
+                <h3>Review</h3>
+                <div class="card" draggable="true">Task 5</div>
+            </div>
+
+            <!-- Completed Column -->
+            <div class="column" data-status="completed">
+                <h3>Completed</h3>
+                <div class="card" draggable="true">Task 4</div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>FYP © 2024</p>
+    </footer>
+
+    <!-- Link to the JS file -->
+    <script src="~/js/WorkManagement.js"></script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+﻿@{
+	ViewData["Title"] = "Email Dashboard";
+	Layout = "~/Views/Shared/_Layout.cshtml"; // Common layout for all views
+}
+
+
+<h1>Management Dashboard</h1>
+<div class="email-list">
+	<!-- Sent Emails -->
+	<div class="card">
+		<div class="card-header">Sent Emails</div>
+		<div class="card-body">
+			<div class="row">
+				@if (ViewBag.SentEmails != null && ViewBag.SentEmails.Count > 0)
+				{
+					foreach (var email in ViewBag.SentEmails)
+					{
+						<div class="email-item col-3">
+							<strong>To:</strong> @email.To <br />
+							<strong>Subject:</strong> @email.Subject <br />
+							<strong>Sent Date:</strong> @email.SentDate <br /> <!-- Added SentDate -->
+							<button class="btn btn-danger btn-sm mt-2" onclick="moveToTrash('@email.Id')">Move to Trash</button> <!-- Improved button styling -->
+						</div>
+					}
+				}
+				else
+				{
+					<p>No sent emails found.</p>
+				}
+			</div>
+		</div>
+	</div>
+</div>
+
+
+
+
+
+<!-- Trash Emails -->
+<div class="card">
+	<div class="card-header">Trash Emails</div>
+	<div class="card-body">
+		@if (ViewBag.TrashEmails != null && ViewBag.TrashEmails.Count > 0)
+		{
+			foreach (var email in ViewBag.TrashEmails)
+			{
+				<div class="email-item">
+					<strong>From:</strong> @email.From <br />
+					<strong>Subject:</strong> @email.Subject <br />
+					<button class="btn btn-success btn-sm mt-2" onclick="restoreEmail('@email.Id')">Restore</button>
+				</div>
+			}
+		}
+		else
+		{
+			<p>No emails in Trash.</p>
+		}
+	</div>
+</div>
+	</div>
+
+<script>
+		function restoreEmail(emailId) {
+		$.post('@Url.Action("RestoreEmail", "SendMail")', { id: emailId }, function (response) {
+			if (response.success) {
+				alert('Email restored.');
+				location.reload();
+			} else {
+				alert('Failed to restore email.');
+			}
+		});
+	}
+
+</script>

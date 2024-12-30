@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="Your Name">
+    <title>User Dashboard</title>
+    
+    <!-- Link CSS -->
+    <link rel="stylesheet" href="/css/Home.css">
+</head>
+<body>
+    <header>
+        <h1>Welcome, [Username]!</h1>
+        <p>Here are your ongoing projects and their progress:</p>
+    </header>
+
+    <main class="dashboard">
+        <!-- Example project cards (replace with dynamic content from server) -->
+        <div class="project-card">
+            <h2>Project Alpha</h2>
+            <p><strong>Deadline:</strong> 12/31/2024</p>
+            <div class="progress-bar-container">
+                <div class="progress-bar" style="width: 75%;" data-progress="75"></div>
+            </div>
+            <p>75% Completed</p>
+            <button class="view-details" onclick="viewProject(1)">View Details</button>
+        </div>
+
+        <div class="project-card">
+            <h2>Project Beta</h2>
+            <p><strong>Deadline:</strong> 01/15/2025</p>
+            <div class="progress-bar-container">
+                <div class="progress-bar" style="width: 50%;" data-progress="50"></div>
+            </div>
+            <p>50% Completed</p>
+            <button class="view-details" onclick="viewProject(2)">View Details</button>
+        </div>
+
+        <!-- Message when no projects are available -->
+        <p class="no-projects" style="display: none;">
+            You have no ongoing projects. <a href="/Projects/Create">Create a new project</a> to get started!
+        </p>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Your Company. All rights reserved.</p>
+    </footer>
+
+    <!-- Link JavaScript -->
+    <script src="/js/Home.js"></script>
+</body>
+</html>

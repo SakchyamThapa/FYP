@@ -1,0 +1,136 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login & Register</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/login.css">
+</head>
+<body>
+    <div class="background-container">
+        <div class="overlay"></div>
+
+        <div class="container">
+            <!-- Login Section -->
+            <div id="loginPage" class="form-container active">
+                <h2>Welcome Back</h2>
+                <p>Please login to your account</p>
+                <form id="loginForm">
+                    <input type="email" id="loginEmail" placeholder="Email" required>
+                    <input type="password" id="loginPassword" placeholder="Password" required>
+                    <button type="submit" id="loginBtn">Login</button>
+                </form>
+                <p class="switch-text">Don't have an account? <a href="#" id="toRegister">Register</a></p>
+            </div>
+
+            <!-- Registration Section -->
+            <div id="registerPage" class="form-container">
+                <h2>Create Account</h2>
+                <form id="registerForm">
+                    <input type="text" id="fullName" name="fullName" placeholder="Full Name" required />
+                    <input type="email" id="email" name="email" placeholder="Email" required />
+                    <input type="password" id="password" name="password" placeholder="Password" required />
+                    <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm Password" required />
+                    <button type="submit" id="registerBtn">Register</button>
+                </form>
+                <p class="switch-text">Already have an account? <a href="#" id="toLogin">Login</a></p>
+            </div>
+
+            <div id="messageBox"></div>
+        </div>
+    </div>
+
+    <script src="/js/login.js"></script>
+
+
+
+
+
+
+    <script>
+        // Toggle between login and register forms
+        document.addEventListener("DOMContentLoaded", () => {
+            const toRegister = document.getElementById("toRegister");
+            const toLogin = document.getElementById("toLogin");
+            const loginPage = document.getElementById("loginPage");
+            const registerPage = document.getElementById("registerPage");
+
+            toRegister.addEventListener("click", (e) => {
+                e.preventDefault();
+                loginPage.classList.remove("active");
+                registerPage.classList.add("active");
+            });
+
+            toLogin.addEventListener("click", (e) => {
+                e.preventDefault();
+                registerPage.classList.remove("active");
+                loginPage.classList.add("active");
+            });
+        });
+
+        // Handle Login Form submission
+        document.getElementById('loginForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            // Collect form data
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            // Prepare data to send to the backend
+            const data = { Email: email, Password: password };
+
+            try {
+                const response = await fetch('/Login/Login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    document.getElementById('messageBox').innerHTML = `<div class="success">${result.message}</div>`;
+                    // Optionally, redirect to a dashboard or home page
+                    // window.location.href = '/dashboard'; 
+                } else {
+                    document.getElementById('messageBox').innerHTML = `<div class="error">${result.message}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('messageBox').innerHTML = `<div class="error">An error occurred. Please try again later.</div>`;
+            }
+        });
+
+        // Handle Register Form submission
+        document.getElementById('registerForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const fullName = document.getElementById('fullName').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            const data = { FullName: fullName, Email: email, Password: password, ConfirmPassword: confirmPassword };
+
+            try {
+                const response = await fetch('/Register/Register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    document.getElementById('messageBox').innerHTML = `<div class="success">${result.message}</div>`;
+                } else {
+                    document.getElementById('messageBox').innerHTML = `<div class="error">${result.message}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('messageBox').innerHTML = `<div class="error">An error occurred. Please try again later.</div>`;
+            }
+        });
+    </script>
+</body>
+</html>

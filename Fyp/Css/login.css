@@ -1,0 +1,118 @@
+/* General Styles */
+body {
+    margin: 0;
+    font-family: 'Lato', sans-serif;
+    background: linear-gradient(to right, #003f5c, #1f4068, #00a8cc); /* Rich blue gradient */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    color: #fff;
+    overflow: hidden;
+}
+
+/* Container */
+.container {
+    width: 400px;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.15)); /* Subtle gradient */
+    backdrop-filter: blur(12px); /* Blur effect */
+    border-radius: 12px;
+    padding: 40px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+    text-align: center;
+}
+
+
+/* Form Section */
+.form-container {
+    display: none;
+}
+
+    .form-container.active {
+        display: block;
+    }
+
+h2 {
+    font-size: 28px;
+    margin-bottom: 20px;
+    color: #f1c40f; /* Golden color for headings */
+}
+
+p {
+    margin-bottom: 20px;
+    font-size: 16px;
+    color: #ecf0f1; /* Light grayish color for text */
+}
+
+/* Input Fields */
+input {
+    width: 100%;
+    padding: 14px;
+    margin-bottom: 20px;
+    border: 2px solid #7f8c8d;
+    border-radius: 8px;
+   background: rgba(0, 0, 0, 0.3); /* Slightly darker background */
+background: linear-gradient(135deg, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.15)); /* Subtle gradient */
+backdrop-filter: blur(12px); /* Apply blur to the backdrop */
+
+    color: #fff;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+    input:focus {
+        outline: none;
+        border-color: #f1c40f;
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+/* Button */
+button {
+    width: 100%;
+    padding: 14px;
+    background: #00a8cc;
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 18px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+    button:hover {
+        background: #007b8c; /* Darker blue on hover */
+    }
+
+/* Switch Text */
+.switch-text {
+    margin-top: 15px;
+    font-size: 14px;
+    color: #ecf0f1;
+}
+
+    .switch-text a {
+        color: #f1c40f;
+        text-decoration: underline;
+        font-weight: bold;
+    }
+
+        .switch-text a:hover {
+            color: #00a8cc;
+        }
+
+/* Message Box */
+#messageBox {
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 8px;
+    font-size: 16px;
+    display: none;
+}
+
+.success {
+    background-color: #27ae60; /* Green for success */
+}
+
+.error {
+    background-color: #e74c3c; /* Red for error */
+}

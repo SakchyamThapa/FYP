@@ -1,0 +1,98 @@
+/* Section positioning */
+section {
+    float: left;
+    margin-left: 20%;
+}
+
+/* Feedback form styling */
+.feedback-form {
+    color: black;
+    border: solid 2px black;
+    height: 700px;
+    width: 700px;
+    margin: 64px auto;
+    background-color: rgba(233, 227, 227, 0.5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Input fields and text area styling */
+.feedback-form form input,
+.feedback-form form textarea {
+    height: 40px;
+    padding: 8px;
+    border-radius: 8px;
+    background: transparent;
+    border: solid 1px black;
+    resize: none;
+    color: black;
+    font-size: 20px;
+    font-weight: bold;
+    margin: 10px 0;
+}
+
+.feedback-form form input:hover,
+.feedback-form form textarea:hover {
+    border-bottom: 2px solid black;
+}
+
+/* Placeholder text styling */
+.feedback-form form input::placeholder,
+.feedback-form form textarea::placeholder {
+    color: black;
+    font-size: 15px;
+    font-weight: bold;
+}
+
+/* Feedback type section */
+.feedback-type {
+    display: flex;
+    justify-content: flex-start;
+    gap: 50px;
+}
+
+/* Checkbox styling */
+.feedback-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Rating section */
+.rating {
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+}
+
+.rating button {
+    background: transparent;
+    border: none;
+}
+
+.rating img {
+    transition: transform 0.2s ease-in-out;
+    opacity: 0.5;
+}
+
+.rating img:hover {
+    transform: scale(1.1, 1.1);
+}
+
+/* Default active rating */
+#happyRating {
+    opacity: 1;
+}
+
+/* Submit button styling */
+.submit-button {
+    width: 150px;
+    margin-top: 50px;
+    background-color: aliceblue;
+    transition: transform 0.2s ease-in-out;
+}
+
+.submit-button:hover {
+    transform: scale(1.1, 1.1);
+}

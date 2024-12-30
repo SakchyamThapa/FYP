@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sonic Points Leaderboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/Css/leaderboard.css">
+</head>
+<body>
+    <!-- User icon with dropdown (Top-Right) -->
+    <div class="top-right-user">
+        <div class="dropdown">
+            <button class="btn btn-outline-light dropdown-toggle user-icon" type="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-user-circle fa-2x"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+                <li><a class="dropdown-item" href="#">Profile</a></li>
+                <li><a class="dropdown-item" href="#">Settings</a></li>
+                <li><a class="dropdown-item" href="#">Redeem</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item text-danger" href="#">Logout</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Leaderboard Container -->
+    <div class="leaderboard-container">
+        <!-- Top bar -->
+        <div class="top-bar">
+            <div class="logo">
+                <img src="/src/download.png" alt="Sonic Logo">
+                <h1>Sonic Points Leaderboard</h1>
+            </div>
+            <div class="user-points">
+                <i class="fas fa-star"></i>
+                <span id="user-points">Your Points: 1200</span>
+            </div>
+        </div>
+
+        <!-- Leaderboard -->
+        <div class="leaderboard">
+            <h2>Top Players</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Name</th>
+                            <th>Sonic Points</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-data">
+                        <!-- Dynamic rows will be populated here -->
+                        <!-- Example Rows -->
+                        <tr>
+                            <td>1</td>
+                            <td>Alice</td>
+                            <td>2500</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>Bob</td>
+                            <td>2200</td>
+                        </tr>
+                        <!-- Add multiple rows here for scrolling -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/Js/leaderboard.js"></script>
+</body>
+</html>
