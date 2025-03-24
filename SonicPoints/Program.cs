@@ -7,6 +7,7 @@ using SonicPoints.Data;
 using SonicPoints.Models;
 using System.Text;
 using Microsoft.OpenApi.Models;
+using SonicPoints.Repositories;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -107,6 +108,18 @@ builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
+builder.Services.AddScoped<ITaskRepository, TaskRepository>();
+builder.Services.AddScoped<IRewardRepository, RewardRepository>();
+builder.Services.AddScoped<ILeaderboardRepository, LeaderboardRepository>();
+builder.Services.AddScoped<IRedeemableItemRepository, RedeemableItemRepository>();
+
+
+
+
+builder.Services.AddMemoryCache();
+
+
 
 var app = builder.Build();
 

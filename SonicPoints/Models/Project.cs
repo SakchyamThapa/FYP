@@ -2,13 +2,13 @@
 {
     public class Project
     {
-        public int Id { get; set; }
+        public int Id { get; set; }  // Ensure this is an int
         public string Name { get; set; }
         public string Description { get; set; }
         public string AdminId { get; set; }
         public User Admin { get; set; }
         public DateTime DueDate { get; set; } // Project Deadline
-        public List<ProjectUser> ProjectUsers { get; set; }
+        public List<ProjectUser> ProjectUsers { get; set; }  // Navigation property
         public List<TaskItem> Tasks { get; set; }
         public List<RedeemableItem> ShopItems { get; set; }
         public List<RedeemHistory> RedeemHistories { get; set; }
@@ -22,7 +22,7 @@
                     return 0; // No tasks, 0% progress
 
                 int totalTasks = Tasks.Count;
-                int completedTasks = Tasks.Count(t => t.Status == TaskStatus.Done); // Compare with TaskStatus enum
+                int completedTasks = Tasks.Count(t => t.Status == TaskStatus.Completed); // Compare with TaskStatus enum
 
                 return (double)completedTasks / totalTasks * 100;
             }
@@ -35,7 +35,7 @@
             {
                 if (Progress == 100)
                     return "Completed";
-                else if (Progress > 50)
+                else if (Progress > 0)
                     return "In Progress";
                 else
                     return "Not Started";
@@ -43,5 +43,3 @@
         }
     }
 }
-  
-  

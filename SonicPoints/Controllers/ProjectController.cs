@@ -94,6 +94,7 @@ namespace SonicPoints.Controllers
             return CreatedAtAction(nameof(GetProject), new { id = projectDto.Id }, projectDto);
         }
 
+
         // ✅ PUT: api/projects/{id} (Update an existing project)
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateProject(int id, [FromBody] UpdateProjectDto updateProjectDto)

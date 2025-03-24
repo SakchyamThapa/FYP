@@ -13,7 +13,7 @@
 
         public class UpdateTaskDto
         {
-            public string Status { get; set; } // "To Do", "In Progress", "Done", "Checking"
+            public int Status { get; set; } // "To Do", "In Progress", "Done", "Checking"
         }
     }
 

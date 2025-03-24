@@ -42,6 +42,32 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "SonicPoints.Controllers.LeaderboardController",
+    "Method": "GetLeaderboard",
+    "RelativePath": "api/leaderboard/{projectId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "projectId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "pageNumber",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "pageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "SonicPoints.Controllers.ProjectController",
     "Method": "GetUserProjects",
     "RelativePath": "api/projects",
@@ -142,6 +168,86 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "SonicPoints.Controllers.RedeemableItemController",
+    "Method": "GetRedeemableItemById",
+    "RelativePath": "api/redeemableitems/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SonicPoints.Controllers.RedeemableItemController",
+    "Method": "AddRedeemableItem",
+    "RelativePath": "api/redeemableitems/add",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "redeemableItem",
+        "Type": "SonicPoints.Models.RedeemableItem",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SonicPoints.Controllers.RedeemableItemController",
+    "Method": "GetRedeemableItemsByProject",
+    "RelativePath": "api/redeemableitems/project/{projectId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "projectId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SonicPoints.Controllers.RewardController",
+    "Method": "RedeemReward",
+    "RelativePath": "api/rewards/redeem",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "redeemDto",
+        "Type": "SonicPoints.Dto.RedeemDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SonicPoints.Controllers.RewardController",
+    "Method": "GetRedeemedRewards",
+    "RelativePath": "api/rewards/redeemed/{projectId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "projectId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "SonicPoints.Controllers.TaskController",
     "Method": "CreateTask",
     "RelativePath": "api/tasks",
@@ -175,8 +281,24 @@
   },
   {
     "ContainingType": "SonicPoints.Controllers.TaskController",
+    "Method": "CheckTaskCompletion",
+    "RelativePath": "api/tasks/{taskId}/check",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "taskId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SonicPoints.Controllers.TaskController",
     "Method": "UpdateTaskStatus",
-    "RelativePath": "api/tasks/{taskId}",
+    "RelativePath": "api/tasks/{taskId}/status",
     "HttpMethod": "PUT",
     "IsController": true,
     "Order": 0,
@@ -189,22 +311,6 @@
       {
         "Name": "updateTaskDto",
         "Type": "SonicPoints.Dto.SonicPoints.DTOs.UpdateTaskDto",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "SonicPoints.Controllers.TaskController",
-    "Method": "CheckTaskCompletion",
-    "RelativePath": "api/tasks/{taskId}/check",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "taskId",
-        "Type": "System.Int32",
         "IsRequired": true
       }
     ],

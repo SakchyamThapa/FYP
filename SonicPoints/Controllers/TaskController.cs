@@ -44,7 +44,7 @@ namespace SonicPoints.Controllers
             {
                 Title = createTaskDto.Title,
                 Description = createTaskDto.Description,
-                Status = SonicPoints.Models.TaskStatus.ToDo,  // Ensure full namespace path
+                Status = SonicPoints.Models.TaskStatus.Backlog,  // Ensure full namespace path
                 ProjectId = createTaskDto.ProjectId,
                 RewardPoints = createTaskDto.RewardPoints,
                 AssignedDate = DateTime.UtcNow,
@@ -57,17 +57,20 @@ namespace SonicPoints.Controllers
         }
 
         // ✅ PUT: api/tasks/{taskId} (Update task status, especially for checking or completing tasks)
-        [HttpPut("{taskId}")]
+        [HttpPut("{taskId}/status")]
         public async Task<IActionResult> UpdateTaskStatus(int taskId, [FromBody] UpdateTaskDto updateTaskDto)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var success = await _taskRepository.UpdateTaskStatusAsync(taskId, userId, updateTaskDto);
 
             if (!success)
-                return BadRequest("Task update failed, check permissions.");
+            {
+                return BadRequest("Failed to update task status. Either the task doesn't exist or you are not authorized.");
+            }
 
-            return NoContent();
+            return Ok("Task status updated successfully.");
         }
+
 
         // ✅ POST: api/tasks/{taskId}/check (Checker role confirms task completion)
         [HttpPost("{taskId}/check")]

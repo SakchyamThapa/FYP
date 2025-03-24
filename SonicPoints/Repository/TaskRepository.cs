@@ -40,46 +40,82 @@ namespace SonicPoints.Repositories
             return task;
         }
 
-        // ✅ Update task status
         public async Task<bool> UpdateTaskStatusAsync(int taskId, string userId, UpdateTaskDto updateTaskDto)
         {
-            var task = await _context.Tasks.FindAsync(taskId);
+            var task = await _context.Tasks
+                .Include(t => t.Project)
+                .FirstOrDefaultAsync(t => t.Id == taskId);
 
-            if (task == null || task.Project.AdminId != userId) return false;
+            if (task == null)
+            {
+                return false; // Task not found
+            }
 
-            task.Status = (SonicPoints.Models.TaskStatus)Enum.Parse(typeof(SonicPoints.Models.TaskStatus), updateTaskDto.Status);  // Full namespace path
+            // Ensure the task has an associated project
+            if (task.Project == null)
+            {
+                return false; // Task does not belong to a valid project
+            }
 
-            if (task.Status == SonicPoints.Models.TaskStatus.Done || task.Status == SonicPoints.Models.TaskStatus.Checking)
+            // Ensure the user is an admin of the project
+            if (task.Project.AdminId != userId)
+            {
+                return false; // Unauthorized user
+            }
+
+            // Validate the status as a valid enum value
+            if (!Enum.IsDefined(typeof(SonicPoints.Models.TaskStatus), updateTaskDto.Status))
+            {
+                return false; // Invalid status value
+            }
+
+            // Convert integer to TaskStatus enum
+            task.Status = (SonicPoints.Models.TaskStatus)updateTaskDto.Status;
+
+            // Handle specific task status transitions
+            if (task.Status == SonicPoints.Models.TaskStatus.Completed || task.Status == SonicPoints.Models.TaskStatus.Review)
             {
                 task.AssignedDate = DateTime.UtcNow;
             }
 
+            // Save changes to database
             await _context.SaveChangesAsync();
+
             return true;
         }
 
-        // ✅ Confirm task completion (by a Checker like QA or Manager)
+
+
+
         public async Task<bool> CheckTaskCompletionAsync(int taskId, string userId)
         {
-            var task = await _context.Tasks.Include(t => t.Project)
-                .FirstOrDefaultAsync(t => t.Id == taskId && t.Status == SonicPoints.Models.TaskStatus.Checking);  // Full namespace path
+            // Fetch the task with associated project data
+            var task = await _context.Tasks
+                .Include(t => t.Project)
+                .FirstOrDefaultAsync(t => t.Id == taskId && t.Status == Models.TaskStatus.Review);
 
-            var userRole = _context.ProjectUsers
+            if (task == null)
+                return false; // Task not found or not in review status
+
+            // Fetch the role of the user in the project
+            var userRole = await _context.ProjectUsers
                 .Where(pu => pu.ProjectId == task.ProjectId && pu.UserId == userId)
                 .Select(pu => pu.Role)
-                .FirstOrDefault();
+                .FirstOrDefaultAsync();
 
-            if (task == null || userRole != "Checker") return false;
+            // Allow only Admins or Checkers to mark the task as completed
+            if (task.Project.AdminId != userId && userRole != "Checker")
+                return false; // Unauthorized user
 
-            task.Status = SonicPoints.Models.TaskStatus.Done;
-            task.Leaderboards.Add(new Leaderboard { TaskId = taskId, UserId = userId, CompletedOn = DateTime.UtcNow });
+            // Proceed with marking task as completed
+            task.Status = Models.TaskStatus.Completed;
 
-            // Update points for the user who completed the task
+            // Add leaderboard entry for task completion
             var taskCompletion = new Leaderboard
             {
                 TaskId = task.Id,
                 UserId = userId,
-                CompletedOn = DateTime.UtcNow
+               
             };
 
             _context.Leaderboards.Add(taskCompletion);
@@ -87,5 +123,6 @@ namespace SonicPoints.Repositories
 
             return true;
         }
+
     }
 }

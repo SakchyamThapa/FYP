@@ -33,22 +33,27 @@ namespace SonicPoints.Repositories
 
         public async Task<Project> CreateProjectAsync(Project project, string userId)
         {
+            // Save the project first to generate its Id (auto-increment behavior)
             _context.Projects.Add(project);
             await _context.SaveChangesAsync();
 
-            // Assign the creator as the Admin in ProjectUser
+            // Create a ProjectUser for the project creator
             var projectUser = new ProjectUser
             {
-                ProjectId = project.Id,
+                ProjectId = project.Id,  // This should now have the correct integer value
                 UserId = userId,
-                Role = "Admin",
+                Role = "Admin",  // Set role to "Admin" for the creator
                 RewardPoints = 0
             };
+
+            // Add the ProjectUser and save
             _context.ProjectUsers.Add(projectUser);
             await _context.SaveChangesAsync();
 
             return project;
         }
+
+
 
         public async Task<Project> UpdateProjectAsync(int projectId, string userId, UpdateProjectDto updateProjectDto)
         {

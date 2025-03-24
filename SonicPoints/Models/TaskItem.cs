@@ -14,13 +14,16 @@ namespace SonicPoints.Models
         public DateTime AssignedDate { get; set; }
         public DateTime DueDate { get; set; } // Task deadline
         public List<Leaderboard> Leaderboards { get; set; } // Track who completed it
+
+        public string UserId { get; set; }  // UserId for the user who completed the task
+        public User User { get; set; }
     }
     public enum TaskStatus
     {
-        ToDo,
+        Backlog,
         InProgress,
-        Done,
-        Checking
+        Review,
+        Completed
     }
 
 }

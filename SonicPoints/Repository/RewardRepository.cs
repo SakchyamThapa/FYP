@@ -1,0 +1,39 @@
+﻿using Microsoft.EntityFrameworkCore;
+using SonicPoints.Data;
+using SonicPoints.Models;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace SonicPoints.Repositories
+{
+    public class RewardRepository : IRewardRepository
+    {
+        private readonly AppDbContext _context;
+
+        public RewardRepository(AppDbContext context)
+        {
+            _context = context;
+        }
+
+        public async Task<RedeemableItem> GetRedeemableItemByIdAsync(int redeemId, int projectId)
+        {
+            return await _context.RedeemableItems
+                .FirstOrDefaultAsync(r => r.Id == redeemId && r.ProjectId == projectId);
+        }
+
+        public async Task SaveRedeemHistoryAsync(RedeemHistory redeemHistory)
+        {
+            _context.RedeemHistories.Add(redeemHistory);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<List<RedeemHistory>> GetRedeemedHistoryByProjectAsync(int projectId)
+        {
+            return await _context.RedeemHistories
+                .Include(r => r.RedeemableItem)
+                .Where(r => r.ProjectId == projectId)
+                .ToListAsync();
+        }
+    }
+}
