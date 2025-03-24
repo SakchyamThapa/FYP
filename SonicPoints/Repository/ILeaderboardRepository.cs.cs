@@ -6,6 +6,10 @@ namespace SonicPoints.Repositories
 {
     public interface ILeaderboardRepository
     {
-        Task<List<Leaderboard>> GetLeaderboardByProjectAsync(int projectId);
+        Task<IEnumerable<Leaderboard>> GetLeaderboardByProjectAsync(int projectId);
+
+       
+        Task<int> GetTotalTasksInProjectAsync(int projectId);
+
     }
 }

@@ -20,7 +20,7 @@ namespace SonicPoints.Data
         public DbSet<TaskItem> Tasks { get; set; }
         public DbSet<Leaderboard> Leaderboards { get; set; }
         public DbSet<RedeemableItem> RedeemableItems { get; set; }
-        public DbSet<RedeemHistory> RedeemHistories { get; set; }
+        public DbSet<RedeemHistory> RedeemHistory { get; set; }
         public DbSet<Report> Reports { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

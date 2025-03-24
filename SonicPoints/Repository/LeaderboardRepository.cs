@@ -17,20 +17,30 @@ namespace SonicPoints.Repositories
         }
 
         // Fetch leaderboard for the project with user points and task completion count
-        public async Task<List<Leaderboard>> GetLeaderboardByProjectAsync(int projectId)
+        public async Task<IEnumerable<Leaderboard>> GetLeaderboardByProjectAsync(int projectId)
         {
-            return await _context.Tasks
-                .Where(t => t.ProjectId == projectId) // Filter tasks by projectId
-                .GroupBy(t => t.UserId) // Group tasks by UserId
-                .Select(group => new Leaderboard
+            var leaderboard = await _context.ProjectUsers
+                .Where(pu => pu.ProjectId == projectId)
+                .Select(pu => new Leaderboard
                 {
-                    UserId = group.Key, // UserId associated with the tasks
-                    User = group.FirstOrDefault().User, // Get User details from the first task in the group
-                    PointsEarned = group.Sum(t => t.RewardPoints), // Sum of points for each task completed
-                    TaskCompletionCount = group.Count() // Count tasks completed by the user
+                    UserId = pu.UserId,
+                    User = pu.User,  // Assuming that the User navigation property is included in the ProjectUsers table
+                    PointsEarned = pu.RewardPoints, // Points the user has earned in the project
+                    TaskCompletionCount = _context.Tasks.Count(t => t.UserId == pu.UserId && t.ProjectId == projectId),  // Count tasks for the user in this project
+                    RedeemedPoints = _context.RedeemHistory
+                        .Where(r => r.UserId == pu.UserId && r.ProjectId == projectId) // Filter redeem history for this user and project
+                        .Sum(r => r.PointsUsed) // Sum the points the user has redeemed
                 })
-                .OrderByDescending(l => l.PointsEarned) // Order by points earned in descending order
+                .OrderByDescending(l => l.PointsEarned) // Sort by points earned, descending
                 .ToListAsync();
+
+            return leaderboard; // Return IEnumerable, not List
+        }
+
+        // Fetch total tasks in project for project progress calculation
+        public async Task<int> GetTotalTasksInProjectAsync(int projectId)
+        {
+            return await _context.Tasks.CountAsync(t => t.ProjectId == projectId); // Get the total count of tasks in the project
         }
     }
 }

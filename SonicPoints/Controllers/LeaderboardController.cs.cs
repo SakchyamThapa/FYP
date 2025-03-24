@@ -27,49 +27,61 @@ namespace SonicPoints.Controllers
         [Authorize]
         public async Task<IActionResult> GetLeaderboard(int projectId, int pageNumber = 1, int pageSize = 10)
         {
-            // Construct cache key based on projectId, pageNumber, and pageSize
             string cacheKey = $"leaderboard_{projectId}_page_{pageNumber}_size_{pageSize}";
 
-            // Check if the leaderboard data is cached
-            if (!_cache.TryGetValue(cacheKey, out var cachedLeaderboard))
+            if (!_cache.TryGetValue(cacheKey, out List<LeaderboardDto> cachedLeaderboard))
             {
                 try
                 {
-                    // Fetch the leaderboard for the given project
                     var leaderboard = await _leaderboardRepository.GetLeaderboardByProjectAsync(projectId);
-
                     if (leaderboard == null || !leaderboard.Any())
-                    {
                         return NotFound("No leaderboard data found for this project.");
+
+                    int totalTasksInProject = await _leaderboardRepository.GetTotalTasksInProjectAsync(projectId);
+                    totalTasksInProject = Math.Max(totalTasksInProject, 1); // Prevent division by zero
+
+                    var pagedLeaderboard = leaderboard
+                        .OrderByDescending(l => l.PointsEarned) // Ensure ranking by points
+                        .Skip((pageNumber - 1) * pageSize)
+                        .Take(pageSize)
+                        .Select((l, index) => new LeaderboardDto
+                        {
+                            UserId = l.UserId,
+                            UserName = l.User.UserName,
+                            PointsEarned = l.PointsEarned,
+                            TaskCompletionCount = l.TaskCompletionCount,
+                            RedeemedPoints = l.RedeemedPoints,
+                            LeaderboardRank = index + 1 + ((pageNumber - 1) * pageSize),
+                            ProjectProgress = (l.TaskCompletionCount / (double)totalTasksInProject) * 100,
+                            RedeemablePoints = CalculateKpiPoints(l.PointsEarned, l.TaskCompletionCount, l.RedeemedPoints, index + 1, totalTasksInProject)
+                        })
+                        .ToList();
+
+                    if (pagedLeaderboard.Any()) // Cache only if data exists
+                    {
+                        _cache.Set(cacheKey, pagedLeaderboard, TimeSpan.FromMinutes(10));
                     }
 
-                    // Apply pagination (skip and take)
-                    var pagedLeaderboard = leaderboard.Skip((pageNumber - 1) * pageSize)
-                                                       .Take(pageSize)
-                                                       .ToList();
-
-                    // Prepare the result DTO
-                    var result = pagedLeaderboard.Select(l => new LeaderboardDto
-                    {
-                        UserId = l.UserId,
-                        UserName = l.User.UserName, // Assuming User has UserName property
-                        PointsEarned = l.PointsEarned,
-                        TaskCompletionCount = l.TaskCompletionCount
-                    }).ToList();
-
-                    // Cache the result
-                    _cache.Set(cacheKey, result, TimeSpan.FromMinutes(10)); // Cache for 10 minutes
-
-                    return Ok(result);
+                    return Ok(pagedLeaderboard);
                 }
-                catch (System.Exception ex)
+                catch (Exception ex)
                 {
                     return StatusCode(500, $"Internal server error: {ex.Message}");
                 }
             }
 
-            // Return cached leaderboard data
             return Ok(cachedLeaderboard);
+        }
+
+        // ✅ KPI-Based Redeemable Points Calculation
+        private int CalculateKpiPoints(int pointsEarned, int taskCompletionCount, int redeemedPoints, int rank, int totalTasks)
+        {
+            double basePoints = pointsEarned * 0.5;
+            double taskFactor = taskCompletionCount * 1.2;
+            double redemptionPenalty = redeemedPoints * 0.3;
+            double rankBonus = (totalTasks > 0) ? ((totalTasks - rank) / (double)totalTasks) * 50 : 0;
+
+            return Math.Max(0, (int)(basePoints + taskFactor + rankBonus - redemptionPenalty));
         }
     }
 }

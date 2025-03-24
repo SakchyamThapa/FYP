@@ -9,5 +9,6 @@
         public TaskItem Task { get; set; }
         public int PointsEarned { get; set; }  
         public int TaskCompletionCount { get; set; }
+        public int RedeemedPoints { get; set; }
     }
 }

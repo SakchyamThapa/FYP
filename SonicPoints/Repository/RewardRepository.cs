@@ -24,13 +24,13 @@ namespace SonicPoints.Repositories
 
         public async Task SaveRedeemHistoryAsync(RedeemHistory redeemHistory)
         {
-            _context.RedeemHistories.Add(redeemHistory);
+            _context.RedeemHistory.Add(redeemHistory);
             await _context.SaveChangesAsync();
         }
 
         public async Task<List<RedeemHistory>> GetRedeemedHistoryByProjectAsync(int projectId)
         {
-            return await _context.RedeemHistories
+            return await _context.RedeemHistory
                 .Include(r => r.RedeemableItem)
                 .Where(r => r.ProjectId == projectId)
                 .ToListAsync();
