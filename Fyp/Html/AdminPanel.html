@@ -3,86 +3,369 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel</title>
-
-    <!-- Link to CSS -->
-    <link rel="stylesheet" href="/Css/AdminPanel.css">
-
-    <!-- Font Awesome for Icons -->
+    <title>Enterprise Admin Panel</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #1a4789;
+            --secondary-blue: #2563eb;
+            --light-blue: #e8f0fe;
+            --hover-blue: #1e40af;
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+            --background: #f8fafc;
+            --white: #ffffff;
+            --danger: #dc2626;
+            --danger-hover: #b91c1c;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--background);
+            color: var(--text-dark);
+            line-height: 1.5;
+        }
+
+        /* Navbar Styling */
+        .navbar {
+            background-color: var(--primary-blue);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: var(--white);
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            background-color: var(--white);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo i {
+            font-size: 1.5rem;
+            color: var(--primary-blue);
+        }
+
+        .brand-text {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: var(--white);
+        }
+
+        .user-avatar {
+            width: 35px;
+            height: 35px;
+            background-color: var(--secondary-blue);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Main Content */
+        .page-header {
+            background-color: var(--white);
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .breadcrumb {
+            color: var(--text-light);
+            font-size: 0.875rem;
+        }
+
+        .admin-panel {
+            max-width: 1280px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 600px), 1fr));
+            gap: 2rem;
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .card-header {
+            background-color: var(--light-blue);
+            padding: 1.25rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .card-header h2 {
+            font-size: 1.25rem;
+            color: var(--primary-blue);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        /* Table Styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: var(--light-blue);
+            color: var(--primary-blue);
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        td {
+            font-size: 0.875rem;
+            color: var(--text-dark);
+        }
+
+        /* Button Styling */
+        .btn {
+            padding: 0.625rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: var(--white);
+        }
+
+        .btn-danger:hover {
+            background-color: var(--danger-hover);
+        }
+
+        .btn-primary {
+            background-color: var(--secondary-blue);
+            color: var(--white);
+            width: 100%;
+            justify-content: center;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--hover-blue);
+        }
+
+        /* Form Styling */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-dark);
+            font-size: 0.875rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.625rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--secondary-blue);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        textarea.form-control {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--primary-blue);
+            padding: 1rem;
+            text-align: center;
+            color: var(--white);
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 768px) {
+            .admin-panel {
+                padding: 1rem;
+                grid-template-columns: 1fr;
+            }
+
+            .navbar {
+                padding: 1rem;
+            }
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <h1><i class="fas fa-cogs"></i> Admin Panel</h1>
-        <p>Manage users, projects, and KPI metrics efficiently.</p>
+    <nav class="navbar">
+        <div class="logo-container">
+            <div class="logo">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <span class="brand-text">Enterprise Panel</span>
+        </div>
+        <div class="user-profile">
+            <span>Admin User</span>
+            <div class="user-avatar">
+                <i class="fas fa-user"></i>
+            </div>
+        </div>
+    </nav>
+
+    <header class="page-header">
+        <h1 class="page-title">Dashboard</h1>
+        <div class="breadcrumb">Home / Dashboard</div>
     </header>
 
     <main class="admin-panel">
-        <!-- Users Section -->
-        <section class="users-section">
-            <h2><i class="fas fa-users"></i> Users and KPI</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>User</th>
-                        <th>Email</th>
-                        <th>KPI Points</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>John Doe</td>
-                        <td>johndoe@example.com</td>
-                        <td>85</td>
-                        <td>
-                            <button onclick="resetKPI(1)" class="action-btn reset-btn">
-                                <i class="fas fa-redo-alt"></i> Reset KPI
-                            </button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Jane Smith</td>
-                        <td>janesmith@example.com</td>
-                        <td>90</td>
-                        <td>
-                            <button onclick="resetKPI(2)" class="action-btn reset-btn">
-                                <i class="fas fa-redo-alt"></i> Reset KPI
-                            </button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </section>
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fas fa-users"></i> Users and KPI</h2>
+            </div>
+            <div class="card-body">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Email</th>
+                            <th>KPI Points</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>John Doe</td>
+                            <td>johndoe@example.com</td>
+                            <td>85</td>
+                            <td>
+                                <button onclick="resetKPI(1)" class="btn btn-danger">
+                                    <i class="fas fa-redo-alt"></i> Reset KPI
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Jane Smith</td>
+                            <td>janesmith@example.com</td>
+                            <td>90</td>
+                            <td>
+                                <button onclick="resetKPI(2)" class="btn btn-danger">
+                                    <i class="fas fa-redo-alt"></i> Reset KPI
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-        <!-- Projects Section -->
-        <section class="projects-section">
-            <h2><i class="fas fa-project-diagram"></i> Add New Project</h2>
-            <form id="addProjectForm" method="post" action="/Admin/AddProject">
-                <div>
-                    <label for="name">Project Name:</label>
-                    <input type="text" id="name" name="Name" required />
-                </div>
-                <div>
-                    <label for="deadline">Deadline:</label>
-                    <input type="date" id="deadline" name="Deadline" required />
-                </div>
-                <div>
-                    <label for="description">Description:</label>
-                    <textarea id="description" name="Description"></textarea>
-                </div>
-                <button type="submit" class="action-btn add-btn">
-                    <i class="fas fa-plus-circle"></i> Add Project
-                </button>
-            </form>
-        </section>
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fas fa-project-diagram"></i> Add New Project</h2>
+            </div>
+            <div class="card-body">
+                <form id="addProjectForm" method="post" action="/Admin/AddProject">
+                    <div class="form-group">
+                        <label class="form-label" for="name">Project Name</label>
+                        <input type="text" class="form-control" id="name" name="Name" required />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="deadline">Deadline</label>
+                        <input type="date" class="form-control" id="deadline" name="Deadline" required />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="description">Description</label>
+                        <textarea class="form-control" id="description" name="Description"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus-circle"></i> Add Project
+                    </button>
+                </form>
+            </div>
+        </div>
     </main>
 
     <footer>
-        <p>&copy; 2024 Admin Panel. All rights reserved.</p>
+        <p>&copy; 2024 Enterprise Admin Panel. All rights reserved.</p>
     </footer>
 
-    <!-- Link to JavaScript -->
-    <script src="/Js/AdminPanel.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            window.resetKPI = function(userId) {
+                if (confirm("Are you sure you want to reset this user's KPI points?")) {
+                    fetch(`/Admin/ResetKPI/${userId}`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert("KPI points reset successfully.");
+                            location.reload();
+                        } else {
+                            alert("Failed to reset KPI points.");
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error resetting KPI:", error);
+                    });
+                }
+            };
+        });
+    </script>
 </body>
 </html>
