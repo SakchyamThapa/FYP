@@ -1,27 +1,56 @@
-document.addEventListener("DOMContentLoaded", () => {
-    // Adjust progress bar colors based on progress percentage
-    const progressBars = document.querySelectorAll(".progress-bar");
+// Toggle the create project form
+function toggleProjectForm() {
+  const form = document.getElementById('create-project-form');
+  form.classList.toggle('active');
+}
 
-    progressBars.forEach((bar) => {
-        const progress = parseInt(bar.dataset.progress, 10);
-        if (progress < 50) {
-            bar.style.backgroundColor = "#ff9800"; // Warning color for low progress
-        } else if (progress >= 90) {
-            bar.style.backgroundColor = "#4caf50"; // Success color for high progress
-        }
-    });
+// Handle project creation
+function createProject(event) {
+  event.preventDefault();
 
-    // Check if there are no projects and display the message
-    const projectCards = document.querySelectorAll(".project-card");
-    const noProjectsMessage = document.querySelector(".no-projects");
+  // Get form values
+  const title = document.getElementById('project-title').value;
+  const description = document.getElementById('project-description').value;
+  const deadline = document.getElementById('project-deadline').value;
 
-    if (projectCards.length === 0) {
-        noProjectsMessage.style.display = "block";
-    }
-});
+  // Create a new project card
+  const dashboard = document.querySelector('.dashboard');
+  const projectCard = document.createElement('div');
+  projectCard.classList.add('project-card');
 
-// Placeholder for handling "View Details" button click
+  projectCard.innerHTML = `
+      <h2>${title}</h2>
+      <p><strong>Deadline:</strong> ${deadline}</p>
+      <div class="progress-bar-container">
+        <div class="progress-bar" style="width: 0%" data-progress="0"></div>
+      </div>
+      <p>0% Completed</p>
+      <button class="view-details" onclick="viewProject(${Date.now()})">
+        View Details
+      </button>
+    `;
+
+  // Add the new project card to the dashboard
+  const noProjectsMessage = document.querySelector('.no-projects');
+  if (noProjectsMessage.style.display !== 'none') {
+    noProjectsMessage.style.display = 'none';
+  }
+  dashboard.insertBefore(projectCard, dashboard.querySelector('.project-card'));
+
+  // Reset and hide the form
+  document.getElementById('new-project-form').reset();
+  toggleProjectForm();
+}
+
+// Placeholder for viewing project details
 function viewProject(projectId) {
-    alert(`Viewing details for Project ID: ${projectId}`);
-    // Add navigation or modal logic here
+  // Implement navigation or modal for project details
+  console.log(`Viewing project with ID: ${projectId}`);
+}
+
+const referenceCard = dashboard.querySelector('.project-card');
+if (referenceCard) {
+  dashboard.insertBefore(projectCard, referenceCard);
+} else {
+  dashboard.appendChild(projectCard);
 }

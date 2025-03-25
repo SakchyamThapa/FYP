@@ -2,7 +2,7 @@
 body {
     margin: 0;
     font-family: 'Lato', sans-serif;
-    background: linear-gradient(to right, #003f5c, #1f4068, #00a8cc); /* Rich blue gradient */
+    background-color: #026aa7;
     display: flex;
     justify-content: center;
     align-items: center;
