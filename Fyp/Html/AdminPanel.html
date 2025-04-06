@@ -7,17 +7,22 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --primary-blue: #1a4789;
+            --primary-blue: #4776E6;
             --secondary-blue: #2563eb;
             --light-blue: #e8f0fe;
             --hover-blue: #1e40af;
             --text-dark: #1e293b;
             --text-light: #64748b;
-            --background: #f8fafc;
+            --background: #f1f5f9;
             --white: #ffffff;
             --danger: #dc2626;
             --danger-hover: #b91c1c;
             --border-color: #e2e8f0;
+            --glass-bg: rgba(255, 255, 255, 0.8);
+            --card-shadow: 0 8px 32px rgba(31, 38, 135, 0.2);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --info: #3b82f6;
         }
 
         * {
@@ -28,19 +33,26 @@
 
         body {
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background-color: var(--background);
+            background: linear-gradient(135deg, #8BC6EC 0%, #9599E2 100%);
+            background-attachment: fixed;
             color: var(--text-dark);
             line-height: 1.5;
+            min-height: 100vh;
         }
 
         /* Navbar Styling */
         .navbar {
-            background-color: var(--primary-blue);
+            background: rgba(71, 118, 230, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             padding: 1rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
         .logo-container {
@@ -54,10 +66,11 @@
             width: 40px;
             height: 40px;
             background-color: var(--white);
-            border-radius: 8px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
         .logo i {
@@ -70,6 +83,24 @@
             font-weight: 600;
         }
 
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-link {
+            color: var(--white);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
         .user-profile {
             display: flex;
             align-items: center;
@@ -80,18 +111,24 @@
         .user-avatar {
             width: 35px;
             height: 35px;
-            background-color: var(--secondary-blue);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
         /* Main Content */
         .page-header {
-            background-color: var(--white);
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             padding: 1.5rem 2rem;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            margin-bottom: 2rem;
+            border-radius: 0 0 15px 15px;
+            box-shadow: var(--card-shadow);
         }
 
         .page-title {
@@ -107,7 +144,7 @@
 
         .admin-panel {
             max-width: 1280px;
-            margin: 2rem auto;
+            margin: 0 auto 2rem auto;
             padding: 0 2rem;
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(min(100%, 600px), 1fr));
@@ -115,21 +152,30 @@
         }
 
         .card {
-            background: var(--white);
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid rgba(255, 255, 255, 0.3);
             overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(31, 38, 135, 0.3);
         }
 
         .card-header {
-            background-color: var(--light-blue);
+            background: linear-gradient(to right, rgba(71, 118, 230, 0.8), rgba(142, 84, 233, 0.8));
             padding: 1.25rem;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
         }
 
         .card-header h2 {
             font-size: 1.25rem;
-            color: var(--primary-blue);
             display: flex;
             align-items: center;
             gap: 0.75rem;
@@ -148,11 +194,11 @@
         th, td {
             padding: 1rem;
             text-align: left;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.5);
         }
 
         th {
-            background-color: var(--light-blue);
+            background-color: rgba(232, 240, 254, 0.5);
             color: var(--primary-blue);
             font-weight: 600;
             font-size: 0.875rem;
@@ -163,11 +209,15 @@
             color: var(--text-dark);
         }
 
+        tbody tr:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
         /* Button Styling */
         .btn {
             padding: 0.625rem 1rem;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
@@ -178,23 +228,48 @@
         }
 
         .btn-danger {
-            background-color: var(--danger);
+            background: linear-gradient(to right, #ff416c, #ff4b2b);
             color: var(--white);
+            box-shadow: 0 4px 15px rgba(255, 65, 108, 0.3);
         }
 
         .btn-danger:hover {
-            background-color: var(--danger-hover);
+            background: linear-gradient(to right, #ff4b2b, #ff416c);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 65, 108, 0.4);
         }
 
         .btn-primary {
-            background-color: var(--secondary-blue);
+            background: linear-gradient(to right, #4776E6, #8E54E9);
             color: var(--white);
             width: 100%;
             justify-content: center;
+            box-shadow: 0 4px 15px rgba(71, 118, 230, 0.3);
         }
 
         .btn-primary:hover {
-            background-color: var(--hover-blue);
+            background: linear-gradient(to right, #3966d6, #7e44d9);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(71, 118, 230, 0.4);
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .btn-sm {
+            padding: 0.4rem 0.75rem;
+            font-size: 0.75rem;
+        }
+        
+        .btn-remove {
+            background: linear-gradient(to right, #ff416c, #ff4b2b);
+            color: var(--white);
+        }
+        
+        .btn-remove:hover {
+            background: linear-gradient(to right, #ff4b2b, #ff416c);
         }
 
         /* Form Styling */
@@ -212,10 +287,11 @@
 
         .form-control {
             width: 100%;
-            padding: 0.625rem;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
+            padding: 0.75rem;
+            border: 1px solid rgba(226, 232, 240, 0.7);
+            border-radius: 8px;
             font-size: 0.875rem;
+            background-color: rgba(255, 255, 255, 0.8);
             transition: all 0.2s ease;
         }
 
@@ -223,20 +299,126 @@
             outline: none;
             border-color: var(--secondary-blue);
             box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            background-color: white;
         }
 
-        textarea.form-control {
-            min-height: 120px;
-            resize: vertical;
+        /* Progress Stats */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.3));
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card .icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0.75rem;
+            font-size: 1.5rem;
+        }
+
+        .stat-card .icon.backlog {
+            background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+            color: #e53e3e;
+        }
+
+        .stat-card .icon.progress {
+            background: linear-gradient(135deg, #a1c4fd, #c2e9fb);
+            color: #3182ce;
+        }
+
+        .stat-card .icon.review {
+            background: linear-gradient(135deg, #ffecd2, #fcb69f);
+            color: #dd6b20;
+        }
+
+        .stat-card .icon.completed {
+            background: linear-gradient(135deg, #d4fc79, #96e6a1);
+            color: #38a169;
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+        
+        /* Confirmation Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: var(--glass-bg);
+            margin: 15% auto;
+            padding: 2rem;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .modal-title {
+            margin-bottom: 1rem;
+            color: var(--text-dark);
+            font-size: 1.25rem;
+        }
+
+        .modal-message {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
         }
 
         /* Footer */
         footer {
-            background-color: var(--primary-blue);
+            background: rgba(71, 118, 230, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             padding: 1rem;
             text-align: center;
             color: var(--white);
             font-size: 0.875rem;
+            margin-top: 2rem;
         }
 
         @media (max-width: 768px) {
@@ -247,6 +429,21 @@
 
             .navbar {
                 padding: 1rem;
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-links {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .stats-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .action-buttons {
+                flex-direction: column;
             }
         }
     </style>
@@ -258,6 +455,12 @@
                 <i class="fas fa-shield-alt"></i>
             </div>
             <span class="brand-text">Enterprise Panel</span>
+        </div>
+        <div class="nav-links">
+            <a href="#" class="nav-link active">Dashboard</a>
+            <a href="WorkManagement.html" class="nav-link">Work Management</a>
+            <a href="Leaderboard.html" class="nav-link">Leaderboard</a>
+            <a href="Redeem.html" class="nav-link">Redeem</a>
         </div>
         <div class="user-profile">
             <span>Admin User</span>
@@ -273,6 +476,44 @@
     </header>
 
     <main class="admin-panel">
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fas fa-chart-line"></i> Project Progress Overview</h2>
+            </div>
+            <div class="card-body">
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <div class="icon backlog">
+                            <i class="fas fa-list"></i>
+                        </div>
+                        <div class="stat-value">12</div>
+                        <div class="stat-label">Backlog</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="icon progress">
+                            <i class="fas fa-spinner"></i>
+                        </div>
+                        <div class="stat-value">8</div>
+                        <div class="stat-label">In Progress</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="icon review">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <div class="stat-value">5</div>
+                        <div class="stat-label">Review</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="icon completed">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-value">23</div>
+                        <div class="stat-label">Completed</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="card">
             <div class="card-header">
                 <h2><i class="fas fa-users"></i> Users and KPI</h2>
@@ -293,9 +534,14 @@
                             <td>johndoe@example.com</td>
                             <td>85</td>
                             <td>
-                                <button onclick="resetKPI(1)" class="btn btn-danger">
-                                    <i class="fas fa-redo-alt"></i> Reset KPI
-                                </button>
+                                <div class="action-buttons">
+                                    <button onclick="resetKPI(1)" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-redo-alt"></i> Reset KPI
+                                    </button>
+                                    <button onclick="removeUser(1, 'John Doe')" class="btn btn-sm btn-remove">
+                                        <i class="fas fa-trash-alt"></i> Remove
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                         <tr>
@@ -303,9 +549,29 @@
                             <td>janesmith@example.com</td>
                             <td>90</td>
                             <td>
-                                <button onclick="resetKPI(2)" class="btn btn-danger">
-                                    <i class="fas fa-redo-alt"></i> Reset KPI
-                                </button>
+                                <div class="action-buttons">
+                                    <button onclick="resetKPI(2)" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-redo-alt"></i> Reset KPI
+                                    </button>
+                                    <button onclick="removeUser(2, 'Jane Smith')" class="btn btn-sm btn-remove">
+                                        <i class="fas fa-trash-alt"></i> Remove
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Robert Johnson</td>
+                            <td>robert@example.com</td>
+                            <td>78</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button onclick="resetKPI(3)" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-redo-alt"></i> Reset KPI
+                                    </button>
+                                    <button onclick="removeUser(3, 'Robert Johnson')" class="btn btn-sm btn-remove">
+                                        <i class="fas fa-trash-alt"></i> Remove
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     </tbody>
@@ -315,29 +581,38 @@
 
         <div class="card">
             <div class="card-header">
-                <h2><i class="fas fa-project-diagram"></i> Add New Project</h2>
+                <h2><i class="fas fa-user-plus"></i> Add New User</h2>
             </div>
             <div class="card-body">
-                <form id="addProjectForm" method="post" action="/Admin/AddProject">
+                <form id="addUserForm" method="post" action="/Admin/AddUser">
                     <div class="form-group">
-                        <label class="form-label" for="name">Project Name</label>
-                        <input type="text" class="form-control" id="name" name="Name" required />
+                        <label class="form-label" for="userName">User Information</label>
+                        <input type="text" class="form-control" id="userName" name="UserInfo" 
+                            placeholder="Format: Name,Email,Department,Role" required />
+                        <small style="display: block; margin-top: 5px; color: var(--text-light);">
+                            Example: John Doe,john@example.com,Engineering,Developer
+                        </small>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label" for="deadline">Deadline</label>
-                        <input type="date" class="form-control" id="deadline" name="Deadline" required />
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="description">Description</label>
-                        <textarea class="form-control" id="description" name="Description"></textarea>
-                    </div>
+                    
                     <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-plus-circle"></i> Add Project
+                        <i class="fas fa-plus-circle"></i> Add User
                     </button>
                 </form>
             </div>
         </div>
     </main>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-title">Confirmation</h2>
+            <p id="modalMessage" class="modal-message">Are you sure you want to perform this action?</p>
+            <div class="modal-actions">
+                <button id="cancelAction" class="btn" style="background-color: #e2e8f0;">Cancel</button>
+                <button id="confirmAction" class="btn btn-danger">Confirm</button>
+            </div>
+        </div>
+    </div>
 
     <footer>
         <p>&copy; 2024 Enterprise Admin Panel. All rights reserved.</p>
@@ -345,26 +620,161 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            window.resetKPI = function(userId) {
-                if (confirm("Are you sure you want to reset this user's KPI points?")) {
-                    fetch(`/Admin/ResetKPI/${userId}`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            alert("KPI points reset successfully.");
-                            location.reload();
-                        } else {
-                            alert("Failed to reset KPI points.");
-                        }
-                    })
-                    .catch(error => {
-                        console.error("Error resetting KPI:", error);
-                    });
+            const modal = document.getElementById("confirmModal");
+            const confirmActionBtn = document.getElementById("confirmAction");
+            const cancelActionBtn = document.getElementById("cancelAction");
+            const modalMessage = document.getElementById("modalMessage");
+            
+            let pendingAction = null;
+            let pendingParams = null;
+            
+            // Close modal on cancel
+            cancelActionBtn.addEventListener("click", () => {
+                modal.style.display = "none";
+                pendingAction = null;
+            });
+            
+            // Execute pending action on confirm
+            confirmActionBtn.addEventListener("click", () => {
+                if (pendingAction && typeof window[pendingAction] === "function") {
+                    window[pendingAction](pendingParams.id, true);
                 }
+                modal.style.display = "none";
+            });
+            
+            // Close modal if clicked outside
+            window.addEventListener("click", (event) => {
+                if (event.target === modal) {
+                    modal.style.display = "none";
+                }
+                pendingAction = null;
+            });
+            
+            // Show confirmation dialog
+            window.showConfirmation = function(message, action, params) {
+                modalMessage.textContent = message;
+                pendingAction = action;
+                pendingParams = params;
+                modal.style.display = "block";
             };
+
+            // Reset KPI Handler
+            window.resetKPI = function(userId, confirmed = false) {
+                if (!confirmed) {
+                    showConfirmation(
+                        "Are you sure you want to reset this user's KPI points?", 
+                        "resetKPI", 
+                        { id: userId }
+                    );
+                    return;
+                }
+                
+                fetch(`/Admin/ResetKPI/${userId}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("KPI points reset successfully.");
+                        location.reload();
+                    } else {
+                        alert("Failed to reset KPI points.");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error resetting KPI:", error);
+                });
+            };
+            
+            // Remove User Handler
+            window.removeUser = function(userId, userName, confirmed = false) {
+                if (!confirmed) {
+                    showConfirmation(
+                        `Are you sure you want to remove ${userName}?`, 
+                        "removeUserConfirmed", 
+                        { id: userId }
+                    );
+                    return;
+                }
+                
+                fetch(`/Admin/RemoveUser/${userId}`, {
+                    method: "DELETE",
+                    headers: { "Content-Type": "application/json" },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("User removed successfully.");
+                        location.reload();
+                    } else {
+                        alert("Failed to remove user.");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error removing user:", error);
+                });
+            };
+            
+            // Wrapper for confirmed user removal
+            window.removeUserConfirmed = function(userId) {
+                fetch(`/Admin/RemoveUser/${userId}`, {
+                    method: "DELETE",
+                    headers: { "Content-Type": "application/json" },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("User removed successfully.");
+                        location.reload();
+                    } else {
+                        alert("Failed to remove user.");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error removing user:", error);
+                });
+            };
+
+            // Add User Handler
+            document.getElementById("addUserForm").addEventListener("submit", function(e) {
+                e.preventDefault();
+                const userInfo = document.getElementById("userName").value;
+                
+                // Basic validation
+                if (!userInfo.includes(',')) {
+                    alert("Please use the correct format: Name,Email,Department,Role");
+                    return;
+                }
+                
+                fetch("/Admin/AddUser", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ userInfo })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("User added successfully!");
+                        location.reload();
+                    } else {
+                        alert("Failed to add user.");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error adding user:", error);
+                });
+            });
+
+            // Navigation Handler
+            document.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('click', function() {
+        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+        this.classList.add('active');
+        // Navigation will now proceed normally for anchor tags
+    });
+});
+
         });
     </script>
 </body>

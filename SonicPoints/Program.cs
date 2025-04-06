@@ -8,6 +8,7 @@ using SonicPoints.Models;
 using System.Text;
 using Microsoft.OpenApi.Models;
 using SonicPoints.Repositories;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -51,6 +52,22 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             }
         };
     });
+// Prevent redirect to /Account/Login for API clients
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Events.OnRedirectToLogin = context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+        return Task.CompletedTask;
+    };
+    options.Events.OnRedirectToAccessDenied = context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+        return Task.CompletedTask;
+    };
+});
+
+
 
 builder.Services.AddSwaggerGen(c =>
 {
@@ -82,26 +99,26 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-/*builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.RequireHttpsMetadata = false;
-    options.SaveToken = true;
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(key),
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidIssuer = jwtSettings["Issuer"],
-        ValidAudience = jwtSettings["Audience"],
-        ValidateLifetime = true
-    };
-});*/
+//builder.Services.AddAuthentication(options =>
+//{
+//    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+//    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+//})
+//.AddJwtBearer(options =>
+//{
+//    options.RequireHttpsMetadata = false;
+//    options.SaveToken = true;
+//    options.TokenValidationParameters = new TokenValidationParameters
+//    {
+//        ValidateIssuerSigningKey = true,
+//        IssuerSigningKey = new SymmetricSecurityKey(Key),
+//        ValidateIssuer = true,
+//        ValidateAudience = true,
+//        ValidIssuer = jwtSettings["Issuer"],
+//        ValidAudience = jwtSettings["Audience"],
+//        ValidateLifetime = true
+//    };
+//});
 
 builder.Services.AddAuthorization();
 // Add Controllers & Swagger
@@ -115,9 +132,19 @@ builder.Services.AddScoped<ILeaderboardRepository, LeaderboardRepository>();
 builder.Services.AddScoped<IRedeemableItemRepository, RedeemableItemRepository>();
 
 
-
-
 builder.Services.AddMemoryCache();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        
+        policy.WithOrigins("http://127.0.0.1:5500", "https://localhost:7146")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials(); // Ensure AllowCredentials() is called
+    });
+});
 
 
 
@@ -132,7 +159,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseCors("AllowAll"); // Added CORS middleware here
 app.UseAuthentication(); // 🔹 Add this before Authorization
 app.UseAuthorization();
 

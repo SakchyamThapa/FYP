@@ -1,255 +1,380 @@
-/* General Styles */
+/* Base styles */
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  --primary-color: #6366f1;
+  --text-color: #f8fafc;
+  --secondary-text: #cbd5e1;
+}
+.success-message {
+  color: green;
+  background-color: #d4edda;
+  padding: 10px;
+  border: 1px solid green;
+  margin-bottom: 10px;
+}
+
+.error-message {
+  color: red;
+  background-color: #f8d7da;
+  padding: 10px;
+  border: 1px solid red;
+  margin-bottom: 10px;
+}
+
+.message-box {
+  display: none;
+  font-size: 16px;
+  margin: 10px;
+}
+
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f4f7fc;
   margin: 0;
   padding: 0;
-  color: #333;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  background: linear-gradient(45deg, #0f172a, #1f4b91, #3170c7);
+  background-size: 400% 400%;
+  animation: gradient 15s ease infinite;
+  color: var(--text-color);
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
 }
 
-/* Navigation Header */
-.nav-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #000000;
-  padding: 15px 50px;
-  color: white;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
-/* Header Welcome Section */
-/* Header Welcome Section */
+/* Animated particles for background */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='50' cy='50' r='1' fill='rgba(255, 255, 255, 0.03)'/%3E%3C/svg%3E");
+  background-size: 150px 150px;
+}
+
+/* Header styles */
 .welcome-section {
-  padding: 20px 50px;
-  background-color: #007bff; /* Blue background for the welcome section */
-  color: white;
-  text-align: left; /* Keep the heading left-aligned */
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 30px;
+  margin: 30px 20px 20px;
+  box-shadow: var(--glass-shadow);
+  transition: all 0.3s ease;
 }
 
 .welcome-section h1 {
-  margin: 0;
-  font-size: 2.2rem;
-  font-weight: bold;
+  margin: 0 0 10px 0;
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(90deg, #f8fafc, #cbd5e1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-/* Center only the paragraph horizontally */
 .welcome-section p {
-  margin-top: 5px;
-  font-size: 1rem;
-  display: block; /* Make the paragraph a block element */
-  margin-left: auto;
-  margin-right: auto; /* Horizontally center the paragraph */
-  text-align: center; /* Optional: if you want to center the text inside the paragraph */
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--secondary-text);
 }
 
-/* Dashboard Layout */
+/* Main dashboard */
 .dashboard {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  padding: 30px;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 25px;
+  padding: 0 20px 40px;
+  margin-top: 30px;
 }
 
-/* Project Cards */
+/* Project card styles */
 .project-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-  padding: 20px;
-  width: 100%;
-  max-width: 320px;
-  text-align: center;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  border: 1px solid #e0e0e0;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 25px;
+  box-shadow: var(--glass-shadow);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.project-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
 }
 
 .project-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.project-card:hover::before {
+  opacity: 1;
 }
 
 .project-card h2 {
-  font-size: 1.3rem;
-  color: #222;
-  margin-bottom: 10px;
+  font-size: 1.4rem;
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: var(--text-color);
 }
 
 .project-card p {
-  font-size: 0.95rem;
-  color: #666;
+  color: var(--secondary-text);
+  margin: 10px 0;
 }
 
-/* Progress Bar */
+/* Progress bar styles */
 .progress-bar-container {
-  background: #e9ecef;
-  border-radius: 12px;
-  height: 20px;
   width: 100%;
-  overflow: hidden;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
   margin: 15px 0;
-  position: relative;
+  overflow: hidden;
 }
 
 .progress-bar {
-  background: linear-gradient(135deg, #28a745, #218838);
   height: 100%;
-  transition: width 0.4s ease-in-out;
+  background: linear-gradient(90deg, var(--primary-color), #818cf8);
+  border-radius: 10px;
+  position: relative;
+  transition: width 0.5s ease;
 }
 
-/* Details Button */
-.view-details {
-  background: #007bff;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 12px 18px;
+.progress-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0),
+    rgba(255, 255, 255, 0.2),
+    rgba(255, 255, 255, 0)
+  );
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Button styles */
+.view-details, .create-project-btn, .add-btn, .cancel-btn {
+  background: rgba(99, 102, 241, 0.2);
+  color: var(--text-color);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 0.9rem;
   cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.view-details:hover, .create-project-btn:hover, .add-btn:hover {
+  background: rgba(99, 102, 241, 0.4);
+  border-color: rgba(99, 102, 241, 0.5);
+  transform: translateY(-2px);
+}
+
+.cancel-btn {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.cancel-btn:hover {
+  background: rgba(239, 68, 68, 0.3);
+  border-color: rgba(239, 68, 68, 0.4);
+  transform: translateY(-2px);
+}
+
+/* Create project form styles */
+.create-form {
+  display: none;
+  background: var(--glass-bg);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 25px;
+  margin-top: 15px;
+  box-shadow: var(--glass-shadow);
+  max-width: 500px;
+}
+
+.create-form.active {
+  display: block;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.create-form input,
+.create-form textarea {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  color: var(--text-color);
   font-size: 0.95rem;
-  transition: background 0.3s ease;
+  box-sizing: border-box;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
 }
 
-.view-details:hover {
-  background: #0056b3;
+.create-form input:focus,
+.create-form textarea:focus {
+  outline: none;
+  border-color: rgba(99, 102, 241, 0.5);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
 }
 
-/* No Projects Message */
-.no-projects {
+.create-form input::placeholder,
+.create-form textarea::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.form-actions {
+  display: flex;
+  gap: 15px;
+}
+
+/* Footer styles */
+footer {
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-top: 1px solid var(--glass-border);
+  padding: 20px;
   text-align: center;
-  font-size: 1.2rem;
-  color: #555;
-  font-style: italic;
+  margin-top: 20px;
+}
+
+footer p {
+  margin: 0;
+  color: var(--secondary-text);
+  font-size: 0.9rem;
+}
+
+/* No projects message */
+.no-projects {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--secondary-text);
+  font-size: 1.1rem;
+  padding: 40px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: var(--glass-shadow);
 }
 
 .no-projects a {
-  color: #007bff;
+  color: var(--primary-color);
   text-decoration: none;
-  font-weight: bold;
+  font-weight: 500;
+  transition: all 0.3s ease;
 }
 
 .no-projects a:hover {
   text-decoration: underline;
 }
 
-/* Footer */
-footer {
-  text-align: center;
-  padding: 15px;
-  background: #343a40;
-  color: white;
-  font-size: 0.9rem;
-  margin-top: 20px;
-}
-
-/* Responsive Design */
+/* Media queries for responsiveness */
 @media (max-width: 768px) {
-  .nav-header {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    padding: 10px 20px;
-  }
-
-  .welcome-section {
-    padding: 10px 20px;
-  }
-
   .dashboard {
-    flex-direction: column;
+    grid-template-columns: 1fr;
+  }
+  
+  .welcome-section {
+    margin: 20px 15px 15px;
     padding: 20px;
   }
-
-  .project-card {
-    width: 100%;
+  
+  .welcome-section h1 {
+    font-size: 1.7rem;
   }
 }
 
-/* Create Project Form */
-.create-form {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  padding: 15px;
-  margin-top: 10px;
-  width: 100%;
-  max-width: 400px;
-  transition: all 0.3s ease;
+/* JavaScript helper */
+/* Add this to your Home.js file */
+/*
+function toggleProjectForm() {
+  const form = document.getElementById('create-project-form');
+  form.classList.toggle('active');
 }
 
-.create-form input,
-.create-form textarea {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 0.95rem;
-  box-sizing: border-box;
+function createProject(event) {
+  event.preventDefault();
+  // Add your project creation logic here
+  const title = document.getElementById('project-title').value;
+  const description = document.getElementById('project-description').value;
+  const deadline = document.getElementById('project-deadline').value;
+  
+  console.log('New project:', { title, description, deadline });
+  
+  // Clear form and hide it
+  document.getElementById('new-project-form').reset();
+  toggleProjectForm();
+  
+  // You would normally add a new project card here
 }
 
-.create-form textarea {
-  resize: vertical;
+function viewProject(id) {
+  // Navigate to project details page
+  window.location.href = `/Projects/Details?id=${id}`;
 }
-
-.form-actions {
-  display: flex;
-  gap: 10px;
-}
-
-.add-btn,
-.cancel-btn {
-  padding: 10px 15px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.95rem;
-  transition: background 0.3s ease;
-}
-
-.add-btn {
-  background: #28a745;
-  color: white;
-}
-
-.add-btn:hover {
-  background: #218838;
-}
-
-.cancel-btn {
-  background: #dc3545;
-  color: white;
-}
-
-.cancel-btn:hover {
-  background: #c82333;
-}
-
-/* Animation for form toggle */
-.create-form {
-  opacity: 0;
-  max-height: 0;
-  overflow: hidden;
-}
-
-.create-form.active {
-  opacity: 1;
-  max-height: 500px;
-  margin-bottom: 20px;
-}
-
-/* Create Project Button */
-.create-project-btn {
-  background: #007bff;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: background 0.3s ease;
-}
-
-.create-project-btn:hover {
-  background: #0056b3;
-}
+*/

@@ -64,8 +64,11 @@ namespace SonicPoints.Controllers
             return Ok(projectDto);
         }
 
+
         // ✅ POST: api/projects (Create a new project)
+        [Authorize]
         [HttpPost]
+        
         public async Task<IActionResult> CreateProject([FromBody] CreateProjectDto createProjectDto)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -130,6 +133,7 @@ namespace SonicPoints.Controllers
         }
 
         // ✅ POST: api/projects/{id}/add-user (Admin can add users to the project)
+        [Authorize(Roles = "Admin,Manager")]
         [HttpPost("{id}/add-user")]
         public async Task<IActionResult> AddUserToProject(int id, [FromBody] string newUserId)
         {
