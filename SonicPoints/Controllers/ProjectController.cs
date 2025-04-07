@@ -11,7 +11,7 @@ namespace SonicPoints.Controllers
 {
     [Route("api/projects")]
     [ApiController]
-    //[Authorize] // Requires authentication for all endpoints
+    [Authorize] // Requires authentication for all endpoints
     public class ProjectController : ControllerBase
     {
         private readonly IProjectRepository _projectRepository;
@@ -66,7 +66,7 @@ namespace SonicPoints.Controllers
 
 
         // ✅ POST: api/projects (Create a new project)
-        [Authorize]
+        //[Authorize]
         [HttpPost]
         
         public async Task<IActionResult> CreateProject([FromBody] CreateProjectDto createProjectDto)

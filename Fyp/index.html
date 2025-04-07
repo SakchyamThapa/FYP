@@ -3,31 +3,39 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login & Register</title>
+    <title>SonicPoints - Login & Register</title>
     <!-- Google Fonts -->
     <link
       href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/Css/login.css" />
+    <link rel="stylesheet" href="./Css/login.css" />
   </head>
   <body>
     <div class="background-container">
       <div class="overlay"></div>
 
       <div class="container">
+        <div class="logo">Sonic<span>Points</span></div>
+        
         <!-- Login Section -->
         <div id="loginPage" class="form-container active">
           <h2>Welcome Back</h2>
           <p>Please login to your account</p>
           <form id="loginForm">
-            <input type="email" id="loginEmail" placeholder="Email" required />
-            <input
-              type="password"
-              id="loginPassword"
-              placeholder="Password"
-              required
-            />
+            <div class="input-group">
+              <input type="email" id="loginEmail" placeholder="Email" required />
+              <div class="input-error" id="loginEmailError"></div>
+            </div>
+            <div class="input-group">
+              <input
+                type="password"
+                id="loginPassword"
+                placeholder="Password"
+                required
+              />
+              <div class="input-error" id="loginPasswordError"></div>
+            </div>
             <button type="submit" id="loginBtn">Login</button>
           </form>
           <p class="switch-text">
@@ -39,34 +47,48 @@
         <div id="registerPage" class="form-container">
           <h2>Create Account</h2>
           <form id="registerForm">
-            <input
-              type="text"
-              id="fullName"
-              name="fullName"
-              placeholder="Full Name"
-              required
-            />
-            <input
-              type="email"
-              id="email"
-              name="email"
-              placeholder="Email"
-              required
-            />
-            <input
-              type="password"
-              id="password"
-              name="password"
-              placeholder="Password"
-              required
-            />
-            <input
-              type="password"
-              id="confirmPassword"
-              name="confirmPassword"
-              placeholder="Confirm Password"
-              required
-            />
+            <div class="input-group">
+              <input
+                type="text"
+                id="fullName"
+                name="fullName"
+                placeholder="Full Name"
+                required
+              />
+              <div class="input-error" id="fullNameError"></div>
+            </div>
+            <div class="input-group">
+              <input
+                type="email"
+                id="email"
+                name="email"
+                placeholder="Email"
+                required
+              />
+              <div class="input-error" id="emailError"></div>
+            </div>
+            <div class="input-group">
+              <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="Password"
+                required
+              />
+              <div class="password-strength" id="passwordStrength"></div>
+              <div class="strength-text" id="strengthText"></div>
+              <div class="input-error" id="passwordError"></div>
+            </div>
+            <div class="input-group">
+              <input
+                type="password"
+                id="confirmPassword"
+                name="confirmPassword"
+                placeholder="Confirm Password"
+                required
+              />
+              <div class="input-error" id="confirmPasswordError"></div>
+            </div>
             <button type="submit" id="registerBtn">Register</button>
           </form>
           <p class="switch-text">
@@ -78,49 +100,6 @@
       </div>
     </div>
 
-    <script>
-      // Static functionality for switching between login and register forms
-      document.addEventListener('DOMContentLoaded', () => {
-        const toRegister = document.getElementById('toRegister');
-        const toLogin = document.getElementById('toLogin');
-        const loginPage = document.getElementById('loginPage');
-        const registerPage = document.getElementById('registerPage');
-
-        toRegister.addEventListener('click', (e) => {
-          e.preventDefault();
-          loginPage.classList.remove('active');
-          registerPage.classList.add('active');
-        });
-
-        toLogin.addEventListener('click', (e) => {
-          e.preventDefault();
-          registerPage.classList.remove('active');
-          loginPage.classList.add('active');
-        });
-      });
-
-      // Simulate login/register response
-      document
-        .getElementById('loginForm')
-        .addEventListener('submit', function (event) {
-          event.preventDefault();
-          document.getElementById(
-            'messageBox'
-          ).innerHTML = `<div class="success">Logged in successfully!</div>`;
-        });
-
-      document
-        .getElementById('registerForm')
-        .addEventListener('submit', function (event) {
-          event.preventDefault();
-          document.getElementById(
-            'messageBox'
-          ).innerHTML = `<div class="success">Registered successfully!</div>`;
-        });
-
-        
-    </script>
-
-    <script src="/Js/login.js"></script>
+    <script src="./Js/login.js"></script>
   </body>
 </html>

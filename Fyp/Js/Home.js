@@ -2,10 +2,12 @@
 
 import { isAuthenticated, getToken } from './sessionStorage.js';
 
+
 window.toggleProjectForm = toggleProjectForm;
 window.createProject = createProject;
 window.viewProject = viewProject;
 window.logout = logout;
+window.refreshProjects = fetchProjects; // Expose fetch function globally
 
 document.addEventListener("DOMContentLoaded", function () {
   if (!isAuthenticated()) {
@@ -15,6 +17,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
   setUsername();
   fetchProjects();
+});
+
+// Add history state change listener to detect navigation events
+window.addEventListener('popstate', function() {
+  if (window.location.pathname === '/' || window.location.pathname === '/home') {
+    fetchProjects();
+  }
 });
 
 // Extract and display username from JWT
@@ -39,25 +48,55 @@ function logout() {
 // Fetch projects from the API
 async function fetchProjects() {
   clearProjects();
+  
+  // Show loading indicator
+  const loadingIndicator = document.createElement("div");
+  loadingIndicator.id = "projects-loading";
+  loadingIndicator.className = "loading-indicator";
+  loadingIndicator.innerHTML = "Loading projects...";
+  document.querySelector(".dashboard").appendChild(loadingIndicator);
 
   try {
     const token = getToken();
+    
+    // Log authentication status
+    console.log("Authentication status:", isAuthenticated());
+    console.log("Token prefix:", token ? token.substring(0, 15) + "..." : "No token");
+    
     const response = await fetch("https://localhost:7146/api/projects", {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${token}`,
+        "Authorization": `Bearer ${token}`,
         "Content-Type": "application/json"
       },
+      credentials: "include"
     });
+
+    // Remove loading indicator
+    const loadingElem = document.getElementById("projects-loading");
+    if (loadingElem) loadingElem.remove();
+
+    console.log("Response status:", response.status);
+    
+    if (response.status === 401) {
+      console.error("Unauthorized: Token rejected by server");
+      showMessage("Your session has expired. Please log in again.", "error");
+      sessionStorage.removeItem("jwt_token");
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 2000);
+      return;
+    }
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error("Error:", errText);
-      throw new Error("Failed to fetch projects");
+      console.error("API Error:", response.status, errText);
+      throw new Error(`Failed to fetch projects: ${response.status}`);
     }
 
     const projects = await response.json();
-    console.log("Projects:", projects);
+    console.log("Projects received:", projects);
+    console.log("Number of projects:", projects.length);
 
     if (projects.length === 0) {
       document.querySelector(".no-projects").style.display = "block";
@@ -67,7 +106,12 @@ async function fetchProjects() {
     }
   } catch (err) {
     console.error("Fetch error:", err);
-    showMessage("Error fetching projects. Please try again.", "error");
+    console.error("Error details:", err.message);
+    showMessage("Error fetching projects. Please try again later.", "error");
+    
+    // Remove loading indicator on error too
+    const loadingElem = document.getElementById("projects-loading");
+    if (loadingElem) loadingElem.remove();
   }
 }
 
@@ -128,16 +172,19 @@ function toggleProjectForm() {
 
 // Remove all current project cards
 function clearProjects() {
-  const dashboard = document.querySelector(".dashboard");
-  const cards = dashboard.querySelectorAll(".project-card");
-  cards.forEach((card) => card.remove());
+  const projectList = document.getElementById("project-list");
+  projectList.innerHTML = ''; // Clear only the project list container
 }
 
 // Render single project card
 function addProjectToUI(project) {
-  const dashboard = document.querySelector(".dashboard");
-  const noProjects = document.querySelector(".no-projects");
-  noProjects.style.display = "none";
+  console.log("Adding project to UI:", project);
+  
+  // Get project list container
+  const projectList = document.getElementById("project-list");
+  
+  // Hide "no projects" message
+  document.querySelector(".no-projects").style.display = "none";
 
   const deadline = new Date(project.dueDate).toLocaleDateString('en-US');
   const progress = project.progress ?? 0;
@@ -154,8 +201,7 @@ function addProjectToUI(project) {
     <button class="view-details" onclick="viewProject(${project.id})">View Details</button>
   `;
 
-  const insertAfter = document.querySelector(".create-project-btn").parentNode;
-  dashboard.insertBefore(card, insertAfter.nextSibling);
+  projectList.appendChild(card);
 }
 
 // Navigate to individual project page
