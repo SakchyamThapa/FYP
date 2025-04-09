@@ -16,18 +16,21 @@ namespace SonicPoints.Repositories
             _context = context;
         }
 
+        // ✅ Get a redeemable item by ID
         public async Task<RedeemableItem> GetRedeemableItemByIdAsync(int redeemId, int projectId)
         {
             return await _context.RedeemableItems
                 .FirstOrDefaultAsync(r => r.Id == redeemId && r.ProjectId == projectId);
         }
 
+        // ✅ Save redeem history when a user redeems a reward
         public async Task SaveRedeemHistoryAsync(RedeemHistory redeemHistory)
         {
             _context.RedeemHistory.Add(redeemHistory);
             await _context.SaveChangesAsync();
         }
 
+        // ✅ Get redeemed rewards history for a specific project
         public async Task<List<RedeemHistory>> GetRedeemedHistoryByProjectAsync(int projectId)
         {
             return await _context.RedeemHistory

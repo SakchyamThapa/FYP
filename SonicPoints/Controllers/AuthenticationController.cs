@@ -26,7 +26,7 @@ namespace SonicPoints.Controllers
             _configuration = configuration;
         }
 
-
+        // 🔒 Test Protected Route
         [Authorize]
         [HttpGet("protected")]
         public IActionResult ProtectedRoute()
@@ -34,17 +34,14 @@ namespace SonicPoints.Controllers
             return Ok(new { message = "You are authorized!" });
         }
 
-
-
-        //  User Registration
+        // 📝 User Registration
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto model)
         {
-
             var existingUser = await _userManager.FindByEmailAsync(model.Email);
             if (existingUser != null)
             {
-                return Ok(new {Success = false, message = "user with this email already exists"});
+                return Ok(new { success = false, message = "User with this email already exists" });
             }
 
             if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -59,37 +56,44 @@ namespace SonicPoints.Controllers
             if (!result.Succeeded)
                 return BadRequest(result.Errors);
 
-            return Ok(new {success = true, message = "User registered successfully!" });
+            return Ok(new { success = true, message = "User registered successfully!" });
         }
 
-        //  User Login & JWT Token Generation
+        // 🔐 User Login & JWT Token Generation
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto model)
         {
             var email = await _userManager.FindByEmailAsync(model.Email);
-            if (email == null) return Unauthorized(new {success = false,  message = "Invalid Email" });
+            if (email == null)
+                return Unauthorized(new { success = false, message = "Invalid Email" });
 
             var result = await _signInManager.PasswordSignInAsync(email, model.Password, false, false);
-            if (!result.Succeeded) return Unauthorized(new {success = false, message = "Invalid Password" });
+            if (!result.Succeeded)
+                return Unauthorized(new { success = false, message = "Invalid Password" });
 
             var token = GenerateJwtToken(email);
-            return Ok(new {success = true, message = "Login Successful",  token });
+            return Ok(new { success = true, message = "Login Successful", token });
         }
 
-        // 🔹 JWT Token Generator
+        // 🔑 JWT Token Generator
         private string GenerateJwtToken(User user)
         {
             var jwtSettings = _configuration.GetSection("Jwt");
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-            var claims = new[]
+            var claims = new List<Claim>
             {
-        new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()), // Ensure user.Id is converted to string if needed
-        new Claim(JwtRegisteredClaimNames.UniqueName, user.UserName),
-        new Claim(JwtRegisteredClaimNames.Email, user.Email),
-        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-    };
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id),                 // ✅ REQUIRED: Adds the 'sub' claim
+                new Claim(ClaimTypes.NameIdentifier, user.Id),                  // Also useful for internal identity
+                new Claim(ClaimTypes.Name, user.UserName),
+                new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
+
+            // ➕ Add roles if any
+            var roles = _userManager.GetRolesAsync(user).Result;
+            claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
 
             var token = new JwtSecurityToken(
                 issuer: jwtSettings["Issuer"],
@@ -101,6 +105,5 @@ namespace SonicPoints.Controllers
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
-
     }
 }

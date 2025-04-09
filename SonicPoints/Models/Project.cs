@@ -22,7 +22,7 @@
                     return 0; // No tasks, 0% progress
 
                 int totalTasks = Tasks.Count;
-                int completedTasks = Tasks.Count(t => t.Status == TaskStatus.Completed); // Compare with TaskStatus enum
+                int completedTasks = Tasks.Count(t => t.Status == ProjectTaskStatus.Completed); // Compare with TaskStatus enum
 
                 return (double)completedTasks / totalTasks * 100;
             }

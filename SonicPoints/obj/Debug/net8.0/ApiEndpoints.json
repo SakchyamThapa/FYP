@@ -160,8 +160,45 @@
         "IsRequired": true
       },
       {
-        "Name": "newUserId",
+        "Name": "userEmail",
         "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SonicPoints.Controllers.ProjectController",
+    "Method": "AssignRoleToUser",
+    "RelativePath": "api/projects/{id}/assign-role",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "assignUserRoleDto",
+        "Type": "SonicPoints.DTOs.AssignUserRoleDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SonicPoints.Controllers.RedeemableItemController",
+    "Method": "CreateRedeemableItem",
+    "RelativePath": "api/redeemableitems",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "redeemableItemDto",
+        "Type": "SonicPoints.Dto.RedeemableItemDto",
         "IsRequired": true
       }
     ],
@@ -185,15 +222,36 @@
   },
   {
     "ContainingType": "SonicPoints.Controllers.RedeemableItemController",
-    "Method": "AddRedeemableItem",
-    "RelativePath": "api/redeemableitems/add",
-    "HttpMethod": "POST",
+    "Method": "UpdateRedeemableItem",
+    "RelativePath": "api/redeemableitems/{id}",
+    "HttpMethod": "PUT",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "redeemableItem",
-        "Type": "SonicPoints.Models.RedeemableItem",
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "redeemableItemDto",
+        "Type": "SonicPoints.Dto.RedeemableItemDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SonicPoints.Controllers.RedeemableItemController",
+    "Method": "DeleteRedeemableItem",
+    "RelativePath": "api/redeemableitems/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
         "IsRequired": true
       }
     ],
@@ -257,7 +315,7 @@
     "Parameters": [
       {
         "Name": "createTaskDto",
-        "Type": "SonicPoints.Dto.SonicPoints.DTOs.CreateTaskDto",
+        "Type": "SonicPoints.DTOs.CreateTaskDto",
         "IsRequired": true
       }
     ],
@@ -265,14 +323,14 @@
   },
   {
     "ContainingType": "SonicPoints.Controllers.TaskController",
-    "Method": "GetProjectTasks",
-    "RelativePath": "api/tasks/{projectId}",
+    "Method": "GetTaskById",
+    "RelativePath": "api/tasks/{taskId}",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "projectId",
+        "Name": "taskId",
         "Type": "System.Int32",
         "IsRequired": true
       }
@@ -310,7 +368,7 @@
       },
       {
         "Name": "updateTaskDto",
-        "Type": "SonicPoints.Dto.SonicPoints.DTOs.UpdateTaskDto",
+        "Type": "SonicPoints.DTOs.UpdateTaskDto",
         "IsRequired": true
       }
     ],

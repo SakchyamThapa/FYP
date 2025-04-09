@@ -10,7 +10,7 @@ export function getToken() {
     console.error("No JWT token found in session storage");
     return null;
   }
-  
+
   // Log first 10 chars of token for debugging
   console.log(`Token retrieved: ${token.substring(0, 10)}...`);
   return token;
@@ -26,51 +26,34 @@ export function isAuthenticated() {
     console.warn("Authentication check failed: No token found");
     return false;
   }
-  
+
+  if (isTokenExpired(token)) {
+    clearToken(); // Clear expired token
+    return false; // Token is expired
+  }
+
+  return true; // Token is valid
+}
+
+/**
+ * Check if the token is expired
+ * @param {string} token The JWT token
+ * @returns {boolean} True if token is expired
+ */
+function isTokenExpired(token) {
   try {
-    // Basic token structure validation
-    const parts = token.split('.');
-    if (parts.length !== 3) {
-      console.error("Invalid JWT token format: Expected 3 parts");
-      sessionStorage.removeItem("jwt_token"); // Remove invalid token
-      return false;
+    const payload = token.split('.')[1];
+    const decoded = JSON.parse(atob(payload));
+    const expiration = decoded.exp;  // Expiration timestamp (usually in seconds)
+
+    if (expiration && expiration < Date.now() / 1000) {
+      console.error(`JWT token expired at ${new Date(expiration * 1000).toLocaleString()}`);
+      return true; // Token has expired
     }
-    
-    // Check token payload
-    try {
-      const payload = JSON.parse(atob(parts[1]));
-      console.log("Token payload successfully decoded");
-      
-      // Check token expiration
-      const expiry = payload.exp;
-      if (expiry) {
-        const currentTime = Math.floor(Date.now() / 1000);
-        if (currentTime >= expiry) {
-          console.error(`JWT token expired at ${new Date(expiry * 1000).toLocaleString()}`);
-          sessionStorage.removeItem("jwt_token"); // Remove expired token
-          return false;
-        }
-        
-        // Log time until expiration for debugging
-        const timeRemaining = expiry - currentTime;
-        console.log(`Token valid for ${Math.floor(timeRemaining / 60)} minutes and ${timeRemaining % 60} seconds`);
-      } else {
-        console.warn("Token has no expiration (exp) claim");
-      }
-      
-      // Check for required claims (customize based on your JWT structure)
-      if (!payload.sub) {
-        console.warn("Token missing subject (sub) claim");
-      }
-      
-      return true;
-    } catch (decodeError) {
-      console.error("Failed to decode JWT payload:", decodeError);
-      return false;
-    }
-  } catch (err) {
-    console.error("Error validating JWT token:", err);
-    return false;
+    return false; // Token is still valid
+  } catch (error) {
+    console.error('Error checking token expiration:', error);
+    return true; // If decoding fails, assume expired or invalid token
   }
 }
 
@@ -84,11 +67,11 @@ export function storeToken(token) {
     console.error("Cannot store empty token");
     return false;
   }
-  
+
   try {
     sessionStorage.setItem("jwt_token", token);
     const storedToken = sessionStorage.getItem("jwt_token");
-    
+
     if (storedToken === token) {
       console.log("Token successfully stored in session storage");
       return true;
@@ -111,6 +94,50 @@ export function clearToken() {
 }
 
 /**
+ * Get user role from the JWT token
+ * @returns {string|null} The user's role or null if not found
+ */
+export function getUserRole() {
+  const token = getToken();
+  if (!token) return null;
+
+  try {
+    // Get the payload part of the JWT (second part)
+    const payload = token.split('.')[1];
+
+    // Decode the base64 string
+    const decodedPayload = atob(payload);
+
+    // Parse the JSON
+    const userData = JSON.parse(decodedPayload);
+
+    // Return the role (adjust the property name if yours is different)
+    return userData.role || userData.roles || userData.http_role;
+  } catch (error) {
+    console.error("Error decoding token:", error);
+    return null;
+  }
+}
+
+/**
+ * Check if user has required role
+ * @param {string|string[]} requiredRoles Role(s) to check against
+ * @returns {boolean} True if user has any of the required roles
+ */
+export function hasRole(requiredRoles) {
+  const userRole = getUserRole();
+  if (!userRole) return false;
+
+  // Ensure requiredRoles is always an array
+  if (!Array.isArray(requiredRoles)) {
+    requiredRoles = [requiredRoles];
+  }
+
+  // Check if the user has any of the required roles
+  return requiredRoles.some(role => userRole.includes(role) || userRole === role);
+}
+
+/**
  * Get information from token payload
  * @param {string} claimName Name of the claim to retrieve
  * @returns {any} The claim value or null if not found
@@ -118,11 +145,11 @@ export function clearToken() {
 export function getTokenClaim(claimName) {
   const token = getToken();
   if (!token) return null;
-  
+
   try {
     const parts = token.split('.');
     if (parts.length !== 3) return null;
-    
+
     const payload = JSON.parse(atob(parts[1]));
     return payload[claimName] || null;
   } catch (err) {

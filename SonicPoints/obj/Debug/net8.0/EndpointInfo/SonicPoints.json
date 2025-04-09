@@ -287,7 +287,49 @@
         }
       }
     },
-    "/api/redeemableitems/add": {
+    "/api/projects/{id}/assign-role": {
+      "post": {
+        "tags": [
+          "Project"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignUserRoleDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignUserRoleDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignUserRoleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/redeemableitems": {
       "post": {
         "tags": [
           "RedeemableItem"
@@ -296,21 +338,44 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RedeemableItem"
+                "$ref": "#/components/schemas/RedeemableItemDto"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/RedeemableItem"
+                "$ref": "#/components/schemas/RedeemableItemDto"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/RedeemableItem"
+                "$ref": "#/components/schemas/RedeemableItemDto"
               }
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/redeemableitems/project/{projectId}": {
+      "get": {
+        "tags": [
+          "RedeemableItem"
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -339,16 +404,54 @@
             "description": "OK"
           }
         }
-      }
-    },
-    "/api/redeemableitems/project/{projectId}": {
-      "get": {
+      },
+      "put": {
         "tags": [
           "RedeemableItem"
         ],
         "parameters": [
           {
-            "name": "projectId",
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RedeemableItemDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RedeemableItemDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RedeemableItemDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "RedeemableItem"
+        ],
+        "parameters": [
+          {
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -399,29 +502,6 @@
       "get": {
         "tags": [
           "Reward"
-        ],
-        "parameters": [
-          {
-            "name": "projectId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/tasks/{projectId}": {
-      "get": {
-        "tags": [
-          "Task"
         ],
         "parameters": [
           {
@@ -536,10 +616,51 @@
           }
         }
       }
+    },
+    "/api/tasks/{taskId}": {
+      "get": {
+        "tags": [
+          "Task"
+        ],
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "AssignUserRoleDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "nullable": true
+          },
+          "adminId": {
+            "type": "string",
+            "nullable": true
+          },
+          "role": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "CreateProjectDto": {
         "type": "object",
         "properties": {
@@ -628,7 +749,7 @@
         },
         "additionalProperties": false
       },
-      "RedeemableItem": {
+      "RedeemableItemDto": {
         "type": "object",
         "properties": {
           "id": {

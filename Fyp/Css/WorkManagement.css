@@ -408,6 +408,55 @@ select.form-control {
   background: rgba(255, 255, 255, 0.5);
 }
 
+.task-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.task-points {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.task-points i {
+  color: #f6c23e;
+  margin-right: 3px;
+}
+
+/* Ensure priority badges don't take up all the space */
+.task-priority {
+  flex: 0 0 auto;
+}
+
+/* Form styling update */
+input[type="number"].form-control {
+  width: 100%;
+  padding: 12px 15px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  color: white;
+  font-size: 1rem;
+}
+
+/* Remove number spinner arrows for cleaner look */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
 /* Responsive Adjustments */
 @media (max-width: 768px) {
   .board {

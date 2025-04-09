@@ -10,5 +10,6 @@
         public int PointsEarned { get; set; }  
         public int TaskCompletionCount { get; set; }
         public int RedeemedPoints { get; set; }
+        public DateTime? DateCompleted { get; set; }
     }
 }

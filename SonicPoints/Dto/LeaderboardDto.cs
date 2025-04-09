@@ -3,12 +3,13 @@
     public class LeaderboardDto
     {
         public string UserId { get; set; }
-        public string UserName { get; set; } // Assuming the User has a UserName property
+        public string UserName { get; set; }
         public int PointsEarned { get; set; }
         public int TaskCompletionCount { get; set; }
         public int RedeemedPoints { get; set; }
+        public DateTime? DateCompleted { get; set; }  // Add the DateCompleted field
         public int LeaderboardRank { get; set; }
-        public double ProjectProgress { get; set; } // In percentage
+        public double ProjectProgress { get; set; }
         public int RedeemablePoints { get; set; }
     }
 }

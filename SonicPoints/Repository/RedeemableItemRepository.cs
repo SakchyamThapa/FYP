@@ -16,7 +16,7 @@ namespace SonicPoints.Repositories
             _context = context;
         }
 
-        // Add a redeemable item to the database
+        // ✅ Add a new redeemable item to the database
         public async Task<RedeemableItem> AddRedeemableItemAsync(RedeemableItem redeemableItem)
         {
             _context.RedeemableItems.Add(redeemableItem);
@@ -24,19 +24,44 @@ namespace SonicPoints.Repositories
             return redeemableItem;
         }
 
-        // Fetch a redeemable item by its ID
+        // ✅ Get a redeemable item by its ID
         public async Task<RedeemableItem> GetRedeemableItemByIdAsync(int id)
         {
             return await _context.RedeemableItems
                 .FirstOrDefaultAsync(r => r.Id == id);
         }
 
-        // Fetch all redeemable items for a specific project
+        // ✅ Get all redeemable items for a specific project
         public async Task<List<RedeemableItem>> GetRedeemableItemsByProjectAsync(int projectId)
         {
             return await _context.RedeemableItems
                 .Where(r => r.ProjectId == projectId)
                 .ToListAsync();
+        }
+
+        // ✅ Update a redeemable item
+        public async Task<RedeemableItem> UpdateRedeemableItemAsync(RedeemableItem redeemableItem)
+        {
+            _context.RedeemableItems.Update(redeemableItem);
+            await _context.SaveChangesAsync();
+            return redeemableItem;
+        }
+
+        // ✅ Delete a redeemable item
+        public async Task DeleteRedeemableItemAsync(int id)
+        {
+            var redeemableItem = await _context.RedeemableItems.FindAsync(id);
+            if (redeemableItem != null)
+            {
+                _context.RedeemableItems.Remove(redeemableItem);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        // ✅ Save changes to the database
+        public async Task SaveAsync()
+        {
+            await _context.SaveChangesAsync();
         }
     }
 }

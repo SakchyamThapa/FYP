@@ -1,66 +1,63 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SonicPoints.Dto;
+using SonicPoints.DTOs;
 using SonicPoints.Models;
 using SonicPoints.Repositories;
-using System.Collections.Generic;
-using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace SonicPoints.Controllers
 {
     [Route("api/redeemableitems")]
     [ApiController]
+    [Authorize]
     public class RedeemableItemController : ControllerBase
     {
         private readonly IRedeemableItemRepository _redeemableItemRepository;
+        private readonly IProjectRepository _projectRepository;
 
-        // Injecting the repository for managing redeemable items
-        public RedeemableItemController(IRedeemableItemRepository redeemableItemRepository)
+        public RedeemableItemController(IRedeemableItemRepository redeemableItemRepository, IProjectRepository projectRepository)
         {
             _redeemableItemRepository = redeemableItemRepository;
+            _projectRepository = projectRepository;
         }
 
-        [HttpPost("add")]
-        //[Authorize(Roles = "Admin")]  // Only Admins can add redeemable items
-        public async Task<IActionResult> AddRedeemableItem([FromBody] RedeemableItem redeemableItem)
+        // ✅ POST: api/redeemableitems (Create a new redeemable item for a project)
+        [HttpPost]
+        [Authorize(Roles = "Admin")] // Only Admins can create redeemable items
+        public async Task<IActionResult> CreateRedeemableItem([FromBody] RedeemableItemDto redeemableItemDto)
         {
-            if (redeemableItem == null)
-                return BadRequest("Redeemable item data is invalid.");
+            // Ensure the project exists
+            var project = await _projectRepository.GetProjectByIdAsync(redeemableItemDto.ProjectId, User.FindFirstValue("sub"));
+            if (project == null)
+                return NotFound("Project not found.");
 
-            // Check for ModelState errors
-            if (!ModelState.IsValid)
+            var redeemableItem = new RedeemableItem
             {
-                return BadRequest(ModelState);
-            }
-
-            // Validate the redeemable item data
-            if (string.IsNullOrEmpty(redeemableItem.Name) || redeemableItem.Cost <= 0 || redeemableItem.ProjectId <= 0)
-            {
-                return BadRequest("Invalid redeemable item data.");
-            }
-
-            // Save the redeemable item in the database
-            var addedItem = await _redeemableItemRepository.AddRedeemableItemAsync(redeemableItem);
-
-            if (addedItem == null)
-                return StatusCode(500, "An error occurred while adding the redeemable item.");
-
-            // Convert the added item to DTO and return the response
-            var redeemableItemDto = new RedeemableItemDto
-            {
-                Id = addedItem.Id,
-                Name = addedItem.Name,
-                Cost = addedItem.Cost,
-                ProjectId = addedItem.ProjectId
+                Name = redeemableItemDto.Name,
+                Cost = redeemableItemDto.Cost,
+                ProjectId = redeemableItemDto.ProjectId
             };
 
-            return CreatedAtAction(nameof(GetRedeemableItemById), new { id = redeemableItemDto.Id }, redeemableItemDto);
+            var createdItem = await _redeemableItemRepository.AddRedeemableItemAsync(redeemableItem);
+
+            return CreatedAtAction(nameof(GetRedeemableItemById), new { id = createdItem.Id }, createdItem);
         }
 
+        // ✅ GET: api/redeemableitems/project/{projectId} (Get all redeemable items for a specific project)
+        [HttpGet("project/{projectId}")]
+        public async Task<IActionResult> GetRedeemableItemsByProject(int projectId)
+        {
+            var redeemableItems = await _redeemableItemRepository.GetRedeemableItemsByProjectAsync(projectId);
 
+            if (redeemableItems == null || redeemableItems.Count == 0)
+                return NotFound("No redeemable items found for this project.");
 
-        // GET: api/redeemableitems/{id}
+            return Ok(redeemableItems);
+        }
+
+        // ✅ GET: api/redeemableitems/{id} (Get redeemable item by ID)
         [HttpGet("{id}")]
         public async Task<IActionResult> GetRedeemableItemById(int id)
         {
@@ -69,39 +66,38 @@ namespace SonicPoints.Controllers
             if (redeemableItem == null)
                 return NotFound("Redeemable item not found.");
 
-            // Convert to DTO and return the response
-            var redeemableItemDto = new RedeemableItemDto
-            {
-                Id = redeemableItem.Id,
-                Name = redeemableItem.Name,
-                Cost = redeemableItem.Cost,
-                ProjectId = redeemableItem.ProjectId,
-            };
-
-            return Ok(redeemableItemDto);
+            return Ok(redeemableItem);
         }
 
-        // GET: api/redeemableitems/project/{projectId}
-        [HttpGet("project/{projectId}")]
-        [Authorize]
-        public async Task<IActionResult> GetRedeemableItemsByProject(int projectId)
+        // ✅ PUT: api/redeemableitems/{id} (Update a redeemable item by ID)
+        [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")] // Only Admins can update redeemable items
+        public async Task<IActionResult> UpdateRedeemableItem(int id, [FromBody] RedeemableItemDto redeemableItemDto)
         {
-            // Fetch all redeemable items for the given project
-            var redeemableItems = await _redeemableItemRepository.GetRedeemableItemsByProjectAsync(projectId);
+            var redeemableItem = await _redeemableItemRepository.GetRedeemableItemByIdAsync(id);
+            if (redeemableItem == null)
+                return NotFound("Redeemable item not found.");
 
-            if (redeemableItems == null || redeemableItems.Count == 0)
-                return NotFound("No redeemable items found for this project.");
+            redeemableItem.Name = redeemableItemDto.Name;
+            redeemableItem.Cost = redeemableItemDto.Cost;
 
-            // Convert models to DTOs
-            var result = redeemableItems.Select(r => new RedeemableItemDto
-            {
-                Id = r.Id,
-                Name = r.Name,
-                Cost = r.Cost,
-                ProjectId = r.ProjectId,
-            }).ToList();
+            var updatedItem = await _redeemableItemRepository.UpdateRedeemableItemAsync(redeemableItem);
 
-            return Ok(result);
+            return Ok(updatedItem);
+        }
+
+        // ✅ DELETE: api/redeemableitems/{id} (Delete a redeemable item by ID)
+        [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")] // Only Admins can delete redeemable items
+        public async Task<IActionResult> DeleteRedeemableItem(int id)
+        {
+            var redeemableItem = await _redeemableItemRepository.GetRedeemableItemByIdAsync(id);
+            if (redeemableItem == null)
+                return NotFound("Redeemable item not found.");
+
+            await _redeemableItemRepository.DeleteRedeemableItemAsync(id);
+
+            return NoContent();
         }
     }
 }

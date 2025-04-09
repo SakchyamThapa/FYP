@@ -1,11 +1,13 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using SonicPoints.DTOs;
 using SonicPoints.Models;
 using SonicPoints.Repositories;
 using System.Security.Claims;
-using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace SonicPoints.Controllers
 {
@@ -15,10 +17,12 @@ namespace SonicPoints.Controllers
     public class ProjectController : ControllerBase
     {
         private readonly IProjectRepository _projectRepository;
+        private readonly UserManager<User> _userManager;  // Injecting UserManager
 
-        public ProjectController(IProjectRepository projectRepository)
+        public ProjectController(IProjectRepository projectRepository, UserManager<User> userManager)
         {
             _projectRepository = projectRepository;
+            _userManager = userManager;
         }
 
         // ✅ GET: api/projects (Get all projects for the logged-in user)
@@ -64,11 +68,8 @@ namespace SonicPoints.Controllers
             return Ok(projectDto);
         }
 
-
-        // ✅ POST: api/projects (Create a new project)
-        //[Authorize]
         [HttpPost]
-        
+        [Authorize]  // Only authenticated users can create projects
         public async Task<IActionResult> CreateProject([FromBody] CreateProjectDto createProjectDto)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -78,7 +79,7 @@ namespace SonicPoints.Controllers
                 Name = createProjectDto.Name,
                 Description = createProjectDto.Description,
                 DueDate = createProjectDto.DueDate,
-                AdminId = userId,
+                AdminId = userId,  // Assign the user as the admin of the project
                 ProjectStatus = "Not Started"
             };
 
@@ -98,8 +99,10 @@ namespace SonicPoints.Controllers
         }
 
 
-        // ✅ PUT: api/projects/{id} (Update an existing project)
+
+        // ✅ PUT: api/projects/{id} (Update an existing project) - Admin and Manager roles can update a project
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> UpdateProject(int id, [FromBody] UpdateProjectDto updateProjectDto)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -121,6 +124,7 @@ namespace SonicPoints.Controllers
 
         // ✅ DELETE: api/projects/{id} (Delete a project, only Admins can)
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteProject(int id)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -132,18 +136,48 @@ namespace SonicPoints.Controllers
             return NoContent();
         }
 
-        // ✅ POST: api/projects/{id}/add-user (Admin can add users to the project)
-        [Authorize(Roles = "Admin,Manager")]
         [HttpPost("{id}/add-user")]
-        public async Task<IActionResult> AddUserToProject(int id, [FromBody] string newUserId)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> AddUserToProject(int id, [FromBody] string userEmail)
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var success = await _projectRepository.AddUserToProjectAsync(id, userId, newUserId);
+            var adminId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value; // Get the adminId (logged-in user)
+
+            // Call the repository method to add the user by email
+            var success = await _projectRepository.AddUserToProjectAsync(id, adminId, userEmail);
 
             if (!success)
-                return BadRequest("Failed to add user to project. Check if you're an admin.");
+                return BadRequest("Failed to add user to project. Check if the email is valid and you're an admin.");
 
             return Ok("User added successfully.");
         }
+
+
+
+
+        // ✅ POST: api/projects/{id}/assign-role (Assign roles to users in a project) - Admin only
+        [HttpPost("{id}/assign-role")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> AssignRoleToUser(int id, [FromBody] AssignUserRoleDto assignUserRoleDto)
+        {
+            // Retrieve the project by ID
+            var project = await _projectRepository.GetProjectByIdAsync(id, assignUserRoleDto.AdminId);
+
+            if (project == null)
+                return NotFound("Project not found or you don't have permission to add users.");
+
+            // Retrieve the user by UserId
+            var user = await _userManager.FindByIdAsync(assignUserRoleDto.UserId);
+            if (user == null)
+                return NotFound("User not found.");
+
+            // Now, we pass the correct arguments (projectId, adminId, newUserId) to AddUserToProjectAsync
+            var success = await _projectRepository.AddUserToProjectAsync(id, assignUserRoleDto.AdminId, assignUserRoleDto.UserId);
+
+            if (!success)
+                return BadRequest("Failed to add user to project.");
+
+            return Ok("User role assigned successfully.");
+        }
+
     }
 }

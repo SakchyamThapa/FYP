@@ -37,10 +37,10 @@ namespace SonicPoints.Repositories
             _context.Projects.Add(project);
             await _context.SaveChangesAsync();
 
-            // Create a ProjectUser for the project creator
+            // Create a ProjectUser for the project creator (Admin role)
             var projectUser = new ProjectUser
             {
-                ProjectId = project.Id,  // This should now have the correct integer value
+                ProjectId = project.Id,
                 UserId = userId,
                 Role = "Admin",  // Set role to "Admin" for the creator
                 RewardPoints = 0
@@ -52,6 +52,7 @@ namespace SonicPoints.Repositories
 
             return project;
         }
+
 
 
 
@@ -78,15 +79,28 @@ namespace SonicPoints.Repositories
             return true;
         }
 
-        public async Task<bool> AddUserToProjectAsync(int projectId, string adminId, string newUserId)
+        public async Task<bool> AddUserToProjectAsync(int projectId, string adminId, string userEmail)
         {
             var project = await _context.Projects.FindAsync(projectId);
             if (project == null || project.AdminId != adminId) return false;
 
-            var projectUser = new ProjectUser { ProjectId = projectId, UserId = newUserId, Role = "Member" };
+            // Find the user by email
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
+            if (user == null) return false;
+
+            var projectUser = new ProjectUser
+            {
+                ProjectId = projectId,
+                UserId = user.Id,  // Use the user's Id after finding the user by email
+                Role = "Member"    // Assign "Member" role to the user
+            };
+
             _context.ProjectUsers.Add(projectUser);
             await _context.SaveChangesAsync();
             return true;
         }
+    
+
+
     }
 }

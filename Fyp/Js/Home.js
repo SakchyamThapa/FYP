@@ -1,17 +1,15 @@
-// Home.js - Main front-end code for home page interaction
-
-import { isAuthenticated, getToken } from './sessionStorage.js';
-
+import { isAuthenticated, getToken, clearToken } from './sessionStorage.js';
 
 window.toggleProjectForm = toggleProjectForm;
 window.createProject = createProject;
 window.viewProject = viewProject;
 window.logout = logout;
-window.refreshProjects = fetchProjects; // Expose fetch function globally
+window.refreshProjects = fetchProjects;
 
 document.addEventListener("DOMContentLoaded", function () {
+  // Check if user is authenticated
   if (!isAuthenticated()) {
-    window.location.href = "/login";
+    window.location.href = "/index.html"; // Redirect to login page if not authenticated
     return;
   }
 
@@ -19,37 +17,36 @@ document.addEventListener("DOMContentLoaded", function () {
   fetchProjects();
 });
 
-// Add history state change listener to detect navigation events
-window.addEventListener('popstate', function() {
+window.addEventListener('popstate', function () {
+  // Refresh the projects if we navigate back to the home page
   if (window.location.pathname === '/' || window.location.pathname === '/home') {
     fetchProjects();
   }
 });
 
-// Extract and display username from JWT
+// Set the logged-in user's username
 function setUsername() {
   try {
     const token = getToken();
     const payload = token.split('.')[1];
     const decoded = JSON.parse(atob(payload));
-    const username = decoded.name || decoded.username || decoded.email || "User";
+    const username = decoded.name || decoded.username || decoded.email || "User"; // Fallback to email if no name
     document.getElementById("username").textContent = username;
   } catch (err) {
     console.error("Failed to decode JWT:", err);
   }
 }
 
-// Logout user
+// Log the user out by clearing the token and redirecting to login
 function logout() {
-  sessionStorage.removeItem("jwt_token");
-  window.location.href = "/login";
+  clearToken();
+  window.location.href = "/index.html";
 }
 
-// Fetch projects from the API
+// Fetch the projects and display them on the home page
 async function fetchProjects() {
   clearProjects();
-  
-  // Show loading indicator
+
   const loadingIndicator = document.createElement("div");
   loadingIndicator.id = "projects-loading";
   loadingIndicator.className = "loading-indicator";
@@ -58,32 +55,22 @@ async function fetchProjects() {
 
   try {
     const token = getToken();
-    
-    // Log authentication status
-    console.log("Authentication status:", isAuthenticated());
-    console.log("Token prefix:", token ? token.substring(0, 15) + "..." : "No token");
-    
     const response = await fetch("https://localhost:7146/api/projects", {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${token}`,
         "Content-Type": "application/json"
       },
-      credentials: "include"
     });
 
-    // Remove loading indicator
-    const loadingElem = document.getElementById("projects-loading");
-    if (loadingElem) loadingElem.remove();
+    document.getElementById("projects-loading")?.remove();
 
-    console.log("Response status:", response.status);
-    
     if (response.status === 401) {
       console.error("Unauthorized: Token rejected by server");
       showMessage("Your session has expired. Please log in again.", "error");
-      sessionStorage.removeItem("jwt_token");
+      clearToken();
       setTimeout(() => {
-        window.location.href = "/login";
+        window.location.href = "/index.html";
       }, 2000);
       return;
     }
@@ -96,7 +83,6 @@ async function fetchProjects() {
 
     const projects = await response.json();
     console.log("Projects received:", projects);
-    console.log("Number of projects:", projects.length);
 
     if (projects.length === 0) {
       document.querySelector(".no-projects").style.display = "block";
@@ -106,21 +92,17 @@ async function fetchProjects() {
     }
   } catch (err) {
     console.error("Fetch error:", err);
-    console.error("Error details:", err.message);
     showMessage("Error fetching projects. Please try again later.", "error");
-    
-    // Remove loading indicator on error too
-    const loadingElem = document.getElementById("projects-loading");
-    if (loadingElem) loadingElem.remove();
+    document.getElementById("projects-loading")?.remove();
   }
 }
 
-// Submit new project
+// Create a new project
 async function createProject(event) {
   event.preventDefault();
 
   if (!isAuthenticated()) {
-    window.location.href = "/login";
+    window.location.href = "/index.html"; // Redirect if not authenticated
     return;
   }
 
@@ -164,26 +146,21 @@ async function createProject(event) {
   }
 }
 
-// Show/hide project form
+// Toggle the display of the project creation form
 function toggleProjectForm() {
   const form = document.getElementById("create-project-form");
   form.style.display = form.style.display === "block" ? "none" : "block";
 }
 
-// Remove all current project cards
+// Clear the project list on the home page
 function clearProjects() {
   const projectList = document.getElementById("project-list");
-  projectList.innerHTML = ''; // Clear only the project list container
+  projectList.innerHTML = '';
 }
 
-// Render single project card
+// Add a project to the UI
 function addProjectToUI(project) {
-  console.log("Adding project to UI:", project);
-  
-  // Get project list container
   const projectList = document.getElementById("project-list");
-  
-  // Hide "no projects" message
   document.querySelector(".no-projects").style.display = "none";
 
   const deadline = new Date(project.dueDate).toLocaleDateString('en-US');
@@ -195,7 +172,7 @@ function addProjectToUI(project) {
     <h2>${project.name}</h2>
     <p><strong>Deadline:</strong> ${deadline}</p>
     <div class="progress-bar-container">
-      <div class="progress-bar" style="width: ${progress}%;" data-progress="${progress}"></div>
+      <div class="progress-bar" style="width: ${progress}%" data-progress="${progress}"></div>
     </div>
     <p>${progress}% Completed</p>
     <button class="view-details" onclick="viewProject(${project.id})">View Details</button>
@@ -204,12 +181,12 @@ function addProjectToUI(project) {
   projectList.appendChild(card);
 }
 
-// Navigate to individual project page
+// View a specific project by ID
 function viewProject(projectId) {
   window.location.href = `/project/${projectId}`;
 }
 
-// Show success or error message
+// Show messages to the user (error or success)
 function showMessage(message, type) {
   const box = document.getElementById("messageBox");
   box.textContent = message;
