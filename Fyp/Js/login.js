@@ -112,7 +112,11 @@ document.addEventListener('DOMContentLoaded', function () {
       if (res.ok && data.success && data.token) {
         storeToken(data.token); // ✅ Properly store token
         showMessage(data.message || 'Login successful!', 'success');
-        setTimeout(() => (window.location.href = '/Html/Home.html'), 1000);
+        setTimeout(() => {
+          console.log("Redirecting to home.html");
+          location.assign("/Html/Home.html");  // Better than window.location.href for reload
+        }, 300);
+        
       } else {
         if (data.message?.includes('Invalid Email')) showError('loginEmail', 'loginEmailError', 'Email not found');
         else if (data.message?.includes('Invalid Password')) showError('loginPassword', 'loginPasswordError', 'Incorrect password');

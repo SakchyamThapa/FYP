@@ -60,50 +60,56 @@ namespace SonicPoints.Controllers
         }
 
         // 🔐 User Login & JWT Token Generation
+        // 🔐 User Login & JWT Token Generation
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto model)
         {
-            var email = await _userManager.FindByEmailAsync(model.Email);
-            if (email == null)
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
                 return Unauthorized(new { success = false, message = "Invalid Email" });
 
-            var result = await _signInManager.PasswordSignInAsync(email, model.Password, false, false);
+            var result = await _signInManager.CheckPasswordSignInAsync(user, model.Password, false);
             if (!result.Succeeded)
                 return Unauthorized(new { success = false, message = "Invalid Password" });
 
-            var token = GenerateJwtToken(email);
+            var token = await GenerateJwtToken(user); // ✅ use await version now
             return Ok(new { success = true, message = "Login Successful", token });
         }
 
+
         // 🔑 JWT Token Generator
-        private string GenerateJwtToken(User user)
+        private async Task<string> GenerateJwtToken(User user)
         {
             var jwtSettings = _configuration.GetSection("Jwt");
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]));
+
+            var rawKey = Convert.FromBase64String(jwtSettings["Key"]);
+            var key = new SymmetricSecurityKey(rawKey);
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var claims = new List<Claim>
-            {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Id),                 // ✅ REQUIRED: Adds the 'sub' claim
-                new Claim(ClaimTypes.NameIdentifier, user.Id),                  // Also useful for internal identity
-                new Claim(ClaimTypes.Name, user.UserName),
-                new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-            };
+    {
+        new Claim(JwtRegisteredClaimNames.Sub, user.Id),
+        new Claim(ClaimTypes.NameIdentifier, user.Id),
+        new Claim(ClaimTypes.Name, user.UserName),
+        new Claim(JwtRegisteredClaimNames.Email, user.Email),
+        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+    };
 
-            // ➕ Add roles if any
-            var roles = _userManager.GetRolesAsync(user).Result;
+            // ✅ Add this block to include roles
+            var roles = await _userManager.GetRolesAsync(user);
             claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
 
             var token = new JwtSecurityToken(
                 issuer: jwtSettings["Issuer"],
                 audience: jwtSettings["Audience"],
-                claims: claims,
                 expires: DateTime.UtcNow.AddMinutes(Convert.ToDouble(jwtSettings["ExpiryInMinutes"])),
+                claims: claims,
                 signingCredentials: credentials
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
+
     }
 }

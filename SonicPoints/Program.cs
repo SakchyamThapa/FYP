@@ -1,32 +1,35 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SonicPoints.Data;
 using SonicPoints.Models;
+using SonicPoints.Repositories;
 using System.Text;
 using Microsoft.OpenApi.Models;
-using SonicPoints.Repositories;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure Entity Framework and Database Connection
+// ------------------ DATABASE & IDENTITY ------------------
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Add Identity
 builder.Services.AddIdentity<User, IdentityRole>()
-    .AddEntityFrameworkStores<AppDbContext>()  // Ensure this is correct
+    .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 
-// Configure JWT Authentication
+// ------------------ JWT CONFIG ------------------
+
 var jwtSettings = builder.Configuration.GetSection("Jwt");
+var rawKey = Convert.FromBase64String(jwtSettings["Key"]); // Base64-decoded secret
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
+        options.RequireHttpsMetadata = false; // ✅ For localhost testing
+
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -35,24 +38,35 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = jwtSettings["Issuer"],
             ValidAudience = jwtSettings["Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]))
+            IssuerSigningKey = new SymmetricSecurityKey(rawKey),
+
+            // ✅ MANDATORY: maps claim name correctly to .NET identity
+            NameClaimType = ClaimTypes.NameIdentifier,
+            RoleClaimType = ClaimTypes.Role,
+
+            // Optional: allow slight time skew to avoid 401 on edge of expiry
+            ClockSkew = TimeSpan.FromSeconds(30)
         };
 
+        // ✅ Log success/failure for debugging
         options.Events = new JwtBearerEvents
         {
             OnAuthenticationFailed = context =>
             {
-                Console.WriteLine("Authentication failed: " + context.Exception.Message);
+                Console.WriteLine("❌ AUTHENTICATION FAILED: " + context.Exception.Message);
                 return Task.CompletedTask;
             },
             OnTokenValidated = context =>
             {
-                Console.WriteLine("Token Validated Successfully.");
+                var userId = context.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                Console.WriteLine($"✅ AUTH SUCCESS: Token validated for userId = {userId}");
                 return Task.CompletedTask;
             }
         };
     });
-// Prevent redirect to /Account/Login for API clients
+
+// ------------------ COOKIE REDIRECT OVERRIDE ------------------
+
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.Events.OnRedirectToLogin = context =>
@@ -67,16 +81,15 @@ builder.Services.ConfigureApplicationCookie(options =>
     };
 });
 
-
+// ------------------ SWAGGER CONFIG ------------------
 
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "SonicPoints API", Version = "v1" });
 
-    //  Configure JWT Authentication in Swagger
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Description = "Enter 'Bearer {your token}' (without quotes) in the field below.",
+        Description = "Enter 'Bearer {your token}'",
         Name = "Authorization",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.Http,
@@ -94,44 +107,41 @@ builder.Services.AddSwaggerGen(c =>
                     Id = "Bearer"
                 }
             },
-            new string[] {}
+            Array.Empty<string>()
         }
     });
 });
 
-
-
-builder.Services.AddAuthorization();
-// Add Controllers & Swagger
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
-builder.Services.AddScoped<ITaskRepository, TaskRepository>();
-builder.Services.AddScoped<IRewardRepository, RewardRepository>();
-builder.Services.AddScoped<ILeaderboardRepository, LeaderboardRepository>();
-builder.Services.AddScoped<IRedeemableItemRepository, RedeemableItemRepository>();
-
-
-builder.Services.AddMemoryCache();
+// ------------------ CORS POLICY ------------------
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        
-        policy.WithOrigins("http://127.0.0.1:5500", "https://localhost:7146")
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials(); // Ensure AllowCredentials() is called
+        policy
+            .SetIsOriginAllowed(_ => true)
+            .AllowAnyHeader()
+            .AllowAnyMethod();
     });
 });
 
+// ------------------ DEPENDENCY INJECTION ------------------
 
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
+builder.Services.AddScoped<ITaskRepository, TaskRepository>();
+builder.Services.AddScoped<IRewardRepository, RewardRepository>();
+builder.Services.AddScoped<ILeaderboardRepository, LeaderboardRepository>();
+builder.Services.AddScoped<IRedeemableItemRepository, RedeemableItemRepository>();
+builder.Services.AddMemoryCache();
+
+// ------------------ MIDDLEWARE PIPELINE ------------------
 
 var app = builder.Build();
 
-// Configure Middleware Pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
@@ -140,10 +150,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseCors("AllowAll"); // Added CORS middleware here
-app.UseAuthentication(); // 🔹 Add this before Authorization
+app.UseCors("AllowAll");
+
+app.UseAuthentication(); // ✅ REQUIRED before authorization
 app.UseAuthorization();
 
 app.MapControllers();
-
 app.Run();

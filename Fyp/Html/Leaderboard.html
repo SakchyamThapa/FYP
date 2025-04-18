@@ -21,7 +21,8 @@
                 <li><a class="dropdown-item" href="#">Settings</a></li>
                 <li><a class="dropdown-item" href="#">Redeem</a></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item text-danger" href="#">Logout</a></li>
+                <li><a class="dropdown-item text-danger" href="#" id="logout-link">Logout</a></li>
+
             </ul>
         </div>
     </div>
@@ -71,8 +72,12 @@
             </div>
         </div>
     </div>
-
+    <script>
+        sessionStorage.setItem("jwt_token", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0ZDIwZWFkNS00MWE2LTQ3ZGMtODFkNS01ZThmNDMzMWMwNzAiLCJ1bmlxdWVfbmFtZSI6InRlc3QiLCJlbWFpbCI6InRlc3RAZ21haWwuY29tIiwianRpIjoiZjViMjZiNDctMDJhZS00YTYzLTlkMTktOGNhZGQ4MTVhZDljIiwiZXhwIjoxNzQzNTQwNjU3LCJpc3MiOiJ5b3VyLWlzc3VlciIsImF1ZCI6InlvdXItYXVkaWVuY2UifQ.M9i-cf3dTsV8Dx5QmUkm_BTk3Ud2Zw5FuT4QGjrtBTI");
+        console.log("✅ Token manually injected!");
+      </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/Js/leaderboard.js"></script>
+    <script type="module" src="/Js/leaderboard.js"></script>
+
 </body>
 </html>

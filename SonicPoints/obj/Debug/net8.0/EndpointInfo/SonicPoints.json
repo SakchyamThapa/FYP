@@ -821,7 +821,7 @@
     "securitySchemes": {
       "Bearer": {
         "type": "http",
-        "description": "Enter 'Bearer {your token}' (without quotes) in the field below.",
+        "description": "Enter 'Bearer {your token}'",
         "scheme": "Bearer"
       }
     }

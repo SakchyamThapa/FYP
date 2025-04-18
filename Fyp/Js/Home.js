@@ -1,49 +1,79 @@
 import { isAuthenticated, getToken, clearToken } from './sessionStorage.js';
 
+console.log("Token at script start:", getToken());
+
+// Bind functions to window for use in HTML
 window.toggleProjectForm = toggleProjectForm;
 window.createProject = createProject;
 window.viewProject = viewProject;
 window.logout = logout;
 window.refreshProjects = fetchProjects;
 
-document.addEventListener("DOMContentLoaded", function () {
-  // Check if user is authenticated
-  if (!isAuthenticated()) {
-    window.location.href = "/index.html"; // Redirect to login page if not authenticated
+// ✅ Wait for token before loading protected content
+function waitForTokenThenInit(retries = 5) {
+  const token = getToken();
+
+  if (!token) {
+    console.warn("🔁 Token not available yet. Retrying...");
+    if (retries > 0) {
+      setTimeout(() => waitForTokenThenInit(retries - 1), 150);
+    } else {
+      console.error("❌ Token never became available.");
+      showMessage("Session expired. Please log in again.", "error");
+      clearToken();
+      window.location.href = "/index.html";
+    }
     return;
   }
 
+  console.log("✅ Token available:", token.substring(0, 10));
   setUsername();
   fetchProjects();
+}
+
+function isTokenExpired(token) {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.exp < Date.now() / 1000;
+  } catch {
+    return true;
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  if (!isAuthenticated()) {
+    window.location.href = "/index.html";
+    return;
+  }
+  waitForTokenThenInit();
 });
 
 window.addEventListener('popstate', function () {
-  // Refresh the projects if we navigate back to the home page
   if (window.location.pathname === '/' || window.location.pathname === '/home') {
     fetchProjects();
   }
 });
 
-// Set the logged-in user's username
+// ✅ Decode and set username
 function setUsername() {
   try {
     const token = getToken();
     const payload = token.split('.')[1];
     const decoded = JSON.parse(atob(payload));
-    const username = decoded.name || decoded.username || decoded.email || "User"; // Fallback to email if no name
+    const username = decoded.name || decoded.username || decoded.email || "User";
     document.getElementById("username").textContent = username;
   } catch (err) {
     console.error("Failed to decode JWT:", err);
   }
 }
 
-// Log the user out by clearing the token and redirecting to login
+// ✅ Logout and clear token
 function logout() {
   clearToken();
   window.location.href = "/index.html";
 }
 
-// Fetch the projects and display them on the home page
+// ✅ Fetch projects
 async function fetchProjects() {
   clearProjects();
 
@@ -97,12 +127,12 @@ async function fetchProjects() {
   }
 }
 
-// Create a new project
+// ✅ Create new project
 async function createProject(event) {
   event.preventDefault();
 
   if (!isAuthenticated()) {
-    window.location.href = "/index.html"; // Redirect if not authenticated
+    window.location.href = "/index.html";
     return;
   }
 
@@ -124,7 +154,7 @@ async function createProject(event) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+        "Authorization": `Bearer ${token}`,
       },
       body: JSON.stringify(newProject),
     });
@@ -146,19 +176,19 @@ async function createProject(event) {
   }
 }
 
-// Toggle the display of the project creation form
+// ✅ Toggle project form visibility
 function toggleProjectForm() {
   const form = document.getElementById("create-project-form");
   form.style.display = form.style.display === "block" ? "none" : "block";
 }
 
-// Clear the project list on the home page
+// ✅ Clear existing project cards
 function clearProjects() {
   const projectList = document.getElementById("project-list");
   projectList.innerHTML = '';
 }
 
-// Add a project to the UI
+// ✅ Render project in UI
 function addProjectToUI(project) {
   const projectList = document.getElementById("project-list");
   document.querySelector(".no-projects").style.display = "none";
@@ -181,12 +211,12 @@ function addProjectToUI(project) {
   projectList.appendChild(card);
 }
 
-// View a specific project by ID
+// ✅ Navigate to project page
 function viewProject(projectId) {
   window.location.href = `/project/${projectId}`;
 }
 
-// Show messages to the user (error or success)
+// ✅ Show alert box
 function showMessage(message, type) {
   const box = document.getElementById("messageBox");
   box.textContent = message;
@@ -196,4 +226,5 @@ function showMessage(message, type) {
   setTimeout(() => {
     box.style.display = "none";
   }, 3000);
+  
 }

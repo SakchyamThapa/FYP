@@ -5,8 +5,8 @@ using SonicPoints.DTOs;
 using SonicPoints.Models;
 using SonicPoints.Repositories;
 using System.Security.Claims;
-using System.Linq;
 using System.Threading.Tasks;
+using System.Linq;
 using Microsoft.EntityFrameworkCore;
 
 namespace SonicPoints.Controllers
@@ -17,7 +17,7 @@ namespace SonicPoints.Controllers
     public class ProjectController : ControllerBase
     {
         private readonly IProjectRepository _projectRepository;
-        private readonly UserManager<User> _userManager;  // Injecting UserManager
+        private readonly UserManager<User> _userManager;
 
         public ProjectController(IProjectRepository projectRepository, UserManager<User> userManager)
         {
@@ -29,23 +29,52 @@ namespace SonicPoints.Controllers
         [HttpGet]
         public async Task<IActionResult> GetUserProjects()
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var projects = await _projectRepository.GetUserProjectsAsync(userId);
+            Console.WriteLine("🔍 Inspecting claims for user...");
 
-            var projectDtos = projects.Select(p => new ProjectDto
+            foreach (var claim in User.Claims)
             {
-                Id = p.Id,
-                Name = p.Name,
-                Description = p.Description,
-                DueDate = p.DueDate,
-                ProjectStatus = p.ProjectStatus,
-                Progress = p.Progress
-            });
+                Console.WriteLine($"🔐 Claim: {claim.Type} = {claim.Value}");
+            }
 
-            return Ok(projectDtos);
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            Console.WriteLine($"➡️ Extracted userId from token: {userId}");
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized("❌ Invalid token: No user ID found in claims.");
+            }
+
+            try
+            {
+                var projects = await _projectRepository.GetUserProjectsAsync(userId);
+
+                if (projects == null || !projects.Any())
+                {
+                    return Ok(new List<ProjectDto>()); // ✅ Return empty list if no projects
+                }
+
+                var projectDtos = projects.Select(p => new ProjectDto
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Description = p.Description,
+                    DueDate = p.DueDate,
+                    ProjectStatus = p.ProjectStatus,
+                    Progress = p.Progress
+                });
+
+                return Ok(projectDtos);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("❌ Error fetching projects: " + ex.Message);
+                return StatusCode(500, "Server error while fetching projects.");
+            }
         }
 
-        // ✅ GET: api/projects/{id} (Get a specific project by ID)
+
+        // ✅ GET: api/projects/{id}
         [HttpGet("{id}")]
         public async Task<IActionResult> GetProject(int id)
         {
@@ -68,18 +97,20 @@ namespace SonicPoints.Controllers
             return Ok(projectDto);
         }
 
+        // ✅ POST: api/projects
         [HttpPost]
-        [Authorize]  // Only authenticated users can create projects
         public async Task<IActionResult> CreateProject([FromBody] CreateProjectDto createProjectDto)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized("Invalid token.");
 
             var project = new Project
             {
                 Name = createProjectDto.Name,
                 Description = createProjectDto.Description,
                 DueDate = createProjectDto.DueDate,
-                AdminId = userId,  // Assign the user as the admin of the project
+                AdminId = userId,
                 ProjectStatus = "Not Started"
             };
 
@@ -98,9 +129,7 @@ namespace SonicPoints.Controllers
             return CreatedAtAction(nameof(GetProject), new { id = projectDto.Id }, projectDto);
         }
 
-
-
-        // ✅ PUT: api/projects/{id} (Update an existing project) - Admin and Manager roles can update a project
+        // ✅ PUT: api/projects/{id}
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> UpdateProject(int id, [FromBody] UpdateProjectDto updateProjectDto)
@@ -122,7 +151,7 @@ namespace SonicPoints.Controllers
             });
         }
 
-        // ✅ DELETE: api/projects/{id} (Delete a project, only Admins can)
+        // ✅ DELETE: api/projects/{id}
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteProject(int id)
@@ -136,13 +165,12 @@ namespace SonicPoints.Controllers
             return NoContent();
         }
 
+        // ✅ POST: api/projects/{id}/add-user
         [HttpPost("{id}/add-user")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AddUserToProject(int id, [FromBody] string userEmail)
         {
-            var adminId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value; // Get the adminId (logged-in user)
-
-            // Call the repository method to add the user by email
+            var adminId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var success = await _projectRepository.AddUserToProjectAsync(id, adminId, userEmail);
 
             if (!success)
@@ -151,26 +179,19 @@ namespace SonicPoints.Controllers
             return Ok("User added successfully.");
         }
 
-
-
-
-        // ✅ POST: api/projects/{id}/assign-role (Assign roles to users in a project) - Admin only
+        // ✅ POST: api/projects/{id}/assign-role
         [HttpPost("{id}/assign-role")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AssignRoleToUser(int id, [FromBody] AssignUserRoleDto assignUserRoleDto)
         {
-            // Retrieve the project by ID
             var project = await _projectRepository.GetProjectByIdAsync(id, assignUserRoleDto.AdminId);
-
             if (project == null)
                 return NotFound("Project not found or you don't have permission to add users.");
 
-            // Retrieve the user by UserId
             var user = await _userManager.FindByIdAsync(assignUserRoleDto.UserId);
             if (user == null)
                 return NotFound("User not found.");
 
-            // Now, we pass the correct arguments (projectId, adminId, newUserId) to AddUserToProjectAsync
             var success = await _projectRepository.AddUserToProjectAsync(id, assignUserRoleDto.AdminId, assignUserRoleDto.UserId);
 
             if (!success)
@@ -178,6 +199,5 @@ namespace SonicPoints.Controllers
 
             return Ok("User role assigned successfully.");
         }
-
     }
 }

@@ -1,39 +1,89 @@
-// Sample leaderboard data
-const leaderboardData = [
-    { rank: 1, name: "SonicFan99", points: 1500 },
-    { rank: 2, name: "Speedster", points: 1400 },
-    { rank: 3, name: "RingCollector", points: 1350 },
-    { rank: 4, name: "BlazeRunner", points: 1300 },
-    { rank: 5, name: "TailsBuddy", points: 1250 },
-    { rank: 6, name: "KnucklesPunch", points: 1200 },
-    { rank: 7, name: "ShadowX", points: 1150 },
-];
+import { getToken, isAuthenticated, clearToken } from './sessionStorage.js';
 
-// Display leaderboard data dynamically
-function populateLeaderboard() {
-    const leaderboardTable = document.getElementById("leaderboard-data");
-    leaderboardTable.innerHTML = ""; // Clear any existing rows
-
-    leaderboardData.forEach((player) => {
-        const row = `
-            <tr>
-                <td>${player.rank}</td>
-                <td>${player.name}</td>
-                <td>${player.points}</td>
-            </tr>
-        `;
-        leaderboardTable.innerHTML += row;
-    });
-}
-
-// Update user's Sonic Points (example logic)
-function updateUserPoints(points) {
-    const userPointsElement = document.getElementById("user-points");
-    userPointsElement.textContent = `Your Points: ${points}`;
-}
-
-// Initialize leaderboard
 document.addEventListener("DOMContentLoaded", () => {
-    populateLeaderboard();
-    updateUserPoints(1200); // Example: Set the user's Sonic Points
+  if (!isAuthenticated()) {
+    //window.location.href = "/index.html";
+    return;
+  }
+
+  const projectId = getProjectId(); // You can replace this with dynamic logic
+  fetchLeaderboard(projectId);
+  updateUserPoints(0); // You can fetch real points if endpoint exists
+  setupLogout();
 });
+
+// 🔐 Fetch leaderboard data from backend
+async function fetchLeaderboard(projectId, page = 1, size = 20) {
+  const token = getToken();
+  try {
+    const response = await fetch(`https://localhost:7146/api/leaderboard/${projectId}?pageNumber=${page}&pageSize=${size}`, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (response.status === 401) {
+      console.warn("❌ Unauthorized: Token may be invalid or expired.");
+      clearToken();
+      //window.location.href = "/index.html";
+      return;
+    }
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`API Error: ${errorText}`);
+    }
+
+    const data = await response.json();
+    populateLeaderboard(data);
+  } catch (error) {
+    console.error("🚨 Failed to fetch leaderboard:", error.message);
+    showMessage("Could not load leaderboard. Try again later.", "error");
+  }
+}
+
+// 🧾 Render the leaderboard table
+function populateLeaderboard(data) {
+  const leaderboardTable = document.getElementById("leaderboard-data");
+  leaderboardTable.innerHTML = "";
+
+  data.forEach((player) => {
+    const row = `
+      <tr>
+        <td>${player.leaderboardRank}</td>
+        <td>${player.userName}</td>
+        <td>${player.pointsEarned}</td>
+      </tr>
+    `;
+    leaderboardTable.innerHTML += row;
+  });
+}
+
+// 🟡 Optional: Set your points display (you can fetch real data from another API if needed)
+function updateUserPoints(points) {
+  const userPointsElement = document.getElementById("user-points");
+  userPointsElement.textContent = `Your Points: ${points}`;
+}
+
+// 📌 Get project ID dynamically or hardcoded
+function getProjectId() {
+  return 1; // Replace with logic to read from query param or sessionStorage
+}
+
+// 🚪 Logout functionality
+function setupLogout() {
+  const logoutLink = document.querySelector('.dropdown-item.text-danger');
+  if (logoutLink) {
+    logoutLink.addEventListener('click', () => {
+      clearToken();
+      window.location.href = "/index.html";
+    });
+  }
+}
+
+// 💬 Optional alert handler
+function showMessage(message, type = "error") {
+  alert(message); // Replace with a better UI toast if needed
+}

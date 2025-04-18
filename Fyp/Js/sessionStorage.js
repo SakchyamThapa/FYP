@@ -102,17 +102,20 @@ export function getUserRole() {
   if (!token) return null;
 
   try {
-    // Get the payload part of the JWT (second part)
     const payload = token.split('.')[1];
-
-    // Decode the base64 string
     const decodedPayload = atob(payload);
-
-    // Parse the JSON
     const userData = JSON.parse(decodedPayload);
 
-    // Return the role (adjust the property name if yours is different)
-    return userData.role || userData.roles || userData.http_role;
+    // Look for standard or custom role claim names
+    const roles =
+      userData.role ||
+      userData.roles ||
+      userData["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
+
+    if (!roles) return null;
+
+    // Always return as array
+    return Array.isArray(roles) ? roles : [roles];
   } catch (error) {
     console.error("Error decoding token:", error);
     return null;
