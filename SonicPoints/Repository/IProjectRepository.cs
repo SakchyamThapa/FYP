@@ -13,5 +13,7 @@ namespace SonicPoints.Repositories
         Task<Project> UpdateProjectAsync(int projectId, string userId, UpdateProjectDto updateProjectDto);
         Task<bool> DeleteProjectAsync(int projectId, string userId);
         Task<bool> AddUserToProjectAsync(int projectId, string adminId, string newUserId);
+        Task<string> GetUserRoleInProjectAsync(int projectId, string userId);
+
     }
 }

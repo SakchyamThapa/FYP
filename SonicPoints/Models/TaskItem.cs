@@ -1,11 +1,15 @@
-﻿namespace SonicPoints.Models
+﻿using System.Text.Json.Serialization;
+
+namespace SonicPoints.Models
 {
     public class TaskItem
     {
         public int Id { get; set; }
         public string Title { get; set; }
         public string Description { get; set; }
-        public ProjectTaskStatus Status { get; set; } // Use ProjectTaskStatus, not TaskStatus
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public ProjectTaskStatus Status { get; set; }
+        // Use ProjectTaskStatus, not TaskStatus
         public int ProjectId { get; set; }
         public Project Project { get; set; }
         public int RewardPoints { get; set; } // Points given when completed

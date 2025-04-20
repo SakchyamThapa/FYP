@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿
+
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using SonicPoints.DTOs;
@@ -25,56 +27,27 @@ namespace SonicPoints.Controllers
             _userManager = userManager;
         }
 
-        // ✅ GET: api/projects (Get all projects for the logged-in user)
         [HttpGet]
         public async Task<IActionResult> GetUserProjects()
         {
-            Console.WriteLine("🔍 Inspecting claims for user...");
-
-            foreach (var claim in User.Claims)
-            {
-                Console.WriteLine($"🔐 Claim: {claim.Type} = {claim.Value}");
-            }
-
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            Console.WriteLine($"➡️ Extracted userId from token: {userId}");
-
             if (string.IsNullOrEmpty(userId))
-            {
                 return Unauthorized("❌ Invalid token: No user ID found in claims.");
-            }
 
-            try
+            var projects = await _projectRepository.GetUserProjectsAsync(userId);
+            var projectDtos = projects.Select(p => new ProjectDto
             {
-                var projects = await _projectRepository.GetUserProjectsAsync(userId);
+                Id = p.Id,
+                Name = p.Name,
+                Description = p.Description,
+                DueDate = p.DueDate,
+                ProjectStatus = p.ProjectStatus,
+                Progress = p.Progress
+            });
 
-                if (projects == null || !projects.Any())
-                {
-                    return Ok(new List<ProjectDto>()); // ✅ Return empty list if no projects
-                }
-
-                var projectDtos = projects.Select(p => new ProjectDto
-                {
-                    Id = p.Id,
-                    Name = p.Name,
-                    Description = p.Description,
-                    DueDate = p.DueDate,
-                    ProjectStatus = p.ProjectStatus,
-                    Progress = p.Progress
-                });
-
-                return Ok(projectDtos);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("❌ Error fetching projects: " + ex.Message);
-                return StatusCode(500, "Server error while fetching projects.");
-            }
+            return Ok(projectDtos);
         }
 
-
-        // ✅ GET: api/projects/{id}
         [HttpGet("{id}")]
         public async Task<IActionResult> GetProject(int id)
         {
@@ -97,7 +70,6 @@ namespace SonicPoints.Controllers
             return Ok(projectDto);
         }
 
-        // ✅ POST: api/projects
         [HttpPost]
         public async Task<IActionResult> CreateProject([FromBody] CreateProjectDto createProjectDto)
         {
@@ -129,7 +101,6 @@ namespace SonicPoints.Controllers
             return CreatedAtAction(nameof(GetProject), new { id = projectDto.Id }, projectDto);
         }
 
-        // ✅ PUT: api/projects/{id}
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> UpdateProject(int id, [FromBody] UpdateProjectDto updateProjectDto)
@@ -151,7 +122,6 @@ namespace SonicPoints.Controllers
             });
         }
 
-        // ✅ DELETE: api/projects/{id}
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteProject(int id)
@@ -165,7 +135,6 @@ namespace SonicPoints.Controllers
             return NoContent();
         }
 
-        // ✅ POST: api/projects/{id}/add-user
         [HttpPost("{id}/add-user")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AddUserToProject(int id, [FromBody] string userEmail)
@@ -179,7 +148,6 @@ namespace SonicPoints.Controllers
             return Ok("User added successfully.");
         }
 
-        // ✅ POST: api/projects/{id}/assign-role
         [HttpPost("{id}/assign-role")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AssignRoleToUser(int id, [FromBody] AssignUserRoleDto assignUserRoleDto)

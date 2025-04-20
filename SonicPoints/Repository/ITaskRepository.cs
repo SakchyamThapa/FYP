@@ -1,16 +1,12 @@
-﻿using SonicPoints.DTOs;
-using SonicPoints.Models;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using SonicPoints.Models;
 
-namespace SonicPoints.Repositories
+public interface ITaskRepository
 {
-    public interface ITaskRepository
-    {
-        Task<IEnumerable<TaskItem>> GetTasksByProjectIdAsync(int projectId, string userId);
-        Task<TaskItem> CreateTaskAsync(TaskItem task, string userId);
-        Task<bool> UpdateTaskStatusAsync(TaskItem task);
-        Task<TaskItem> GetTaskByIdAsync(int taskId);
-        Task<bool> SaveAsync();
-    }
+    Task<IEnumerable<TaskItem>> GetTasksByProjectIdAsync(int projectId, string userId);
+    Task<IEnumerable<TaskItem>> GetFilteredTasksAsync(int projectId, string userId, string status = null);
+    Task<TaskItem> CreateTaskAsync(TaskItem task, string userId);
+    Task<bool> UpdateTaskStatusAsync(TaskItem task);
+    Task<TaskItem> GetTaskByIdAsync(int taskId);
+    Task<bool> DeleteTaskAsync(int taskId, string userId);
+    Task<bool> SaveAsync();
 }

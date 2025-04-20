@@ -16,12 +16,30 @@ namespace SonicPoints.Repositories
             _context = context;
         }
 
-        // ✅ Get tasks by projectId
+        // ✅ Get all tasks by projectId
         public async Task<IEnumerable<TaskItem>> GetTasksByProjectIdAsync(int projectId, string userId)
         {
             return await _context.Tasks
-                .Where(t => t.ProjectId == projectId && (t.Project.AdminId == userId || t.Project.ProjectUsers.Any(pu => pu.UserId == userId)))
-                .ToListAsync();  // Ensure you're using ToListAsync from EF Core
+                .Where(t => t.ProjectId == projectId &&
+                            (t.Project.AdminId == userId ||
+                             t.Project.ProjectUsers.Any(pu => pu.UserId == userId)))
+                .ToListAsync();
+        }
+
+        // ✅ Get filtered tasks by status (optional)
+        public async Task<IEnumerable<TaskItem>> GetFilteredTasksAsync(int projectId, string userId, string status = null)
+        {
+            var query = _context.Tasks
+                .Where(t => t.ProjectId == projectId &&
+                            (t.Project.AdminId == userId ||
+                             t.Project.ProjectUsers.Any(pu => pu.UserId == userId)));
+
+            if (!string.IsNullOrEmpty(status) && Enum.TryParse<ProjectTaskStatus>(status, out var parsedStatus))
+            {
+                query = query.Where(t => t.Status == parsedStatus);
+            }
+
+            return await query.ToListAsync();
         }
 
         // ✅ Create a new task
@@ -30,22 +48,32 @@ namespace SonicPoints.Repositories
             _context.Tasks.Add(task);
             await _context.SaveChangesAsync();
 
-            // Add the user to the ProjectUser list if not already part of the project
-            if (!_context.ProjectUsers.Any(pu => pu.UserId == userId && pu.ProjectId == task.ProjectId))
+            // Add user to ProjectUsers if not already in the project
+            var isUserInProject = await _context.ProjectUsers
+                .AnyAsync(pu => pu.UserId == userId && pu.ProjectId == task.ProjectId);
+
+            if (!isUserInProject)
             {
-                _context.ProjectUsers.Add(new ProjectUser { UserId = userId, ProjectId = task.ProjectId, Role = "Member" });
+                _context.ProjectUsers.Add(new ProjectUser
+                {
+                    UserId = userId,
+                    ProjectId = task.ProjectId,
+                    Role = "Member",
+                    RewardPoints = 0
+                });
+
                 await _context.SaveChangesAsync();
             }
 
             return task;
         }
 
-        // ✅ Update Task Status
+        // ✅ Update task status
         public async Task<bool> UpdateTaskStatusAsync(TaskItem task)
         {
             var existingTask = await _context.Tasks.FindAsync(task.Id);
             if (existingTask == null)
-                return false;  // Task not found
+                return false;
 
             existingTask.Status = task.Status;
             _context.Tasks.Update(existingTask);
@@ -53,7 +81,7 @@ namespace SonicPoints.Repositories
             return true;
         }
 
-        // ✅ Get Task by ID
+        // ✅ Get task by ID
         public async Task<TaskItem> GetTaskByIdAsync(int taskId)
         {
             return await _context.Tasks
@@ -61,7 +89,28 @@ namespace SonicPoints.Repositories
                 .FirstOrDefaultAsync(t => t.Id == taskId);
         }
 
-        // ✅ Save changes
+        // ✅ Delete a task with permission check
+        public async Task<bool> DeleteTaskAsync(int taskId, string userId)
+        {
+            var task = await _context.Tasks
+                .Include(t => t.Project)
+                .FirstOrDefaultAsync(t => t.Id == taskId);
+
+            if (task == null)
+                return false;
+
+            bool isOwner = task.UserId == userId;
+            bool isAdmin = task.Project.AdminId == userId;
+
+            if (!isOwner && !isAdmin)
+                return false;
+
+            _context.Tasks.Remove(task);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        // ✅ Save async
         public async Task<bool> SaveAsync()
         {
             await _context.SaveChangesAsync();

@@ -53,14 +53,20 @@ namespace SonicPoints.Controllers
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            // Ensure the task exists and is valid to update
             var task = await _taskRepository.GetTaskByIdAsync(taskId);
             if (task == null)
                 return NotFound("Task not found.");
 
-            // Check if the user has permission (Admin, Manager, or user who assigned the task)
-            if (task.UserId != userId && !User.IsInRole("Admin") && !User.IsInRole("Manager"))
-                return Unauthorized("You do not have permission to update this task.");
+            var role = await _projectRepository.GetUserRoleInProjectAsync(task.ProjectId, userId);
+            if (string.IsNullOrEmpty(role))
+                return Unauthorized("You are not part of this project.");
+
+            // Role-based rule
+            if (updateTaskDto.Status == (int)ProjectTaskStatus.Completed &&
+                !(role == "Admin" || role == "Manager" || role == "Checker"))
+            {
+                return Forbid("Only Admins, Managers, or Checkers can move a task to Completed.");
+            }
 
             task.Status = (ProjectTaskStatus)updateTaskDto.Status;
 
@@ -77,18 +83,16 @@ namespace SonicPoints.Controllers
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            // Ensure the task exists and is in Review status
             var task = await _taskRepository.GetTaskByIdAsync(taskId);
             if (task == null || task.Status != ProjectTaskStatus.Review)
                 return BadRequest("Task not found or not in Review status.");
 
-            // Ensure the user is authorized (Admin or Checker)
-            if (!User.IsInRole("Admin") && !User.IsInRole("Checker"))
-                return Unauthorized("You do not have permission to complete this task.");
+            var role = await _projectRepository.GetUserRoleInProjectAsync(task.ProjectId, userId);
+            if (string.IsNullOrEmpty(role) || !(role == "Admin" || role == "Manager" || role == "Checker"))
+                return Forbid("Only Admins, Managers, or Checkers can complete tasks.");
 
             task.Status = ProjectTaskStatus.Completed;
 
-            // Add points to the user for completing the task
             var leaderboardEntry = await _leaderboardRepository.GetLeaderboardEntry(taskId, userId);
             if (leaderboardEntry == null)
             {

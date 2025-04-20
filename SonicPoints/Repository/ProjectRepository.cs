@@ -33,28 +33,22 @@ namespace SonicPoints.Repositories
 
         public async Task<Project> CreateProjectAsync(Project project, string userId)
         {
-            // Save the project first to generate its Id (auto-increment behavior)
             _context.Projects.Add(project);
             await _context.SaveChangesAsync();
 
-            // Create a ProjectUser for the project creator (Admin role)
             var projectUser = new ProjectUser
             {
                 ProjectId = project.Id,
                 UserId = userId,
-                Role = "Admin",  // Set role to "Admin" for the creator
+                Role = "Admin",
                 RewardPoints = 0
             };
 
-            // Add the ProjectUser and save
             _context.ProjectUsers.Add(projectUser);
             await _context.SaveChangesAsync();
 
             return project;
         }
-
-
-
 
         public async Task<Project> UpdateProjectAsync(int projectId, string userId, UpdateProjectDto updateProjectDto)
         {
@@ -79,28 +73,55 @@ namespace SonicPoints.Repositories
             return true;
         }
 
-        public async Task<bool> AddUserToProjectAsync(int projectId, string adminId, string userEmail)
+        public async Task<bool> AddUserToProjectAsync(int projectId, string adminId, string userEmailOrUserId)
         {
             var project = await _context.Projects.FindAsync(projectId);
             if (project == null || project.AdminId != adminId) return false;
 
-            // Find the user by email
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == userEmailOrUserId || u.Id == userEmailOrUserId);
             if (user == null) return false;
+
+            var alreadyExists = await _context.ProjectUsers
+                .AnyAsync(pu => pu.ProjectId == projectId && pu.UserId == user.Id);
+            if (alreadyExists) return false;
 
             var projectUser = new ProjectUser
             {
                 ProjectId = projectId,
-                UserId = user.Id,  // Use the user's Id after finding the user by email
-                Role = "Member"    // Assign "Member" role to the user
+                UserId = user.Id,
+                Role = "Member"
             };
 
             _context.ProjectUsers.Add(projectUser);
             await _context.SaveChangesAsync();
             return true;
         }
-    
+        public async Task<string> GetUserRoleInProjectAsync(int projectId, string userId)
+        {
+            return await _context.ProjectUsers
+                .Where(pu => pu.ProjectId == projectId && pu.UserId == userId)
+                .Select(pu => pu.Role)
+                .FirstOrDefaultAsync();
+        }
 
+        public async Task<bool> UpdateProjectUserRoleAsync(int projectId, string adminId, string userId, string newRole)
+        {
+            var project = await _context.Projects.FindAsync(projectId);
+            if (project == null || project.AdminId != adminId)
+                return false;
 
+            var projectUser = await _context.ProjectUsers
+                .FirstOrDefaultAsync(pu => pu.ProjectId == projectId && pu.UserId == userId);
+
+            if (projectUser == null)
+                return false;
+
+            projectUser.Role = newRole;
+            _context.ProjectUsers.Update(projectUser);
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
     }
 }

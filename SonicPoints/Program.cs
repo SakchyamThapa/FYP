@@ -23,13 +23,12 @@ builder.Services.AddIdentity<User, IdentityRole>()
 // ------------------ JWT CONFIG ------------------
 
 var jwtSettings = builder.Configuration.GetSection("Jwt");
-var rawKey = Convert.FromBase64String(jwtSettings["Key"]); // Base64-decoded secret
+var rawKey = Convert.FromBase64String(jwtSettings["Key"]);
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.RequireHttpsMetadata = false; // ✅ For localhost testing
-
+        options.RequireHttpsMetadata = false;
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -39,16 +38,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidIssuer = jwtSettings["Issuer"],
             ValidAudience = jwtSettings["Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(rawKey),
-
-            // ✅ MANDATORY: maps claim name correctly to .NET identity
             NameClaimType = ClaimTypes.NameIdentifier,
             RoleClaimType = ClaimTypes.Role,
-
-            // Optional: allow slight time skew to avoid 401 on edge of expiry
             ClockSkew = TimeSpan.FromSeconds(30)
         };
 
-        // ✅ Log success/failure for debugging
         options.Events = new JwtBearerEvents
         {
             OnAuthenticationFailed = context =>
@@ -56,10 +50,20 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 Console.WriteLine("❌ AUTHENTICATION FAILED: " + context.Exception.Message);
                 return Task.CompletedTask;
             },
+            OnMessageReceived = context =>
+            {
+                Console.WriteLine("📨 TOKEN RECEIVED: " + context.Token);
+                return Task.CompletedTask;
+            },
             OnTokenValidated = context =>
             {
                 var userId = context.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 Console.WriteLine($"✅ AUTH SUCCESS: Token validated for userId = {userId}");
+                return Task.CompletedTask;
+            },
+            OnChallenge = context =>
+            {
+                Console.WriteLine("🚫 CHALLENGE: " + context.AuthenticateFailure?.Message);
                 return Task.CompletedTask;
             }
         };
@@ -116,12 +120,12 @@ builder.Services.AddSwaggerGen(c =>
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddPolicy("AllowFrontend", policy =>
     {
-        policy
-            .SetIsOriginAllowed(_ => true)
-            .AllowAnyHeader()
-            .AllowAnyMethod();
+        policy.WithOrigins("http://127.0.0.1:5500")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 
@@ -138,9 +142,26 @@ builder.Services.AddScoped<ILeaderboardRepository, LeaderboardRepository>();
 builder.Services.AddScoped<IRedeemableItemRepository, RedeemableItemRepository>();
 builder.Services.AddMemoryCache();
 
-// ------------------ MIDDLEWARE PIPELINE ------------------
-
 var app = builder.Build();
+
+// ------------------ ROLE SEEDING ------------------
+
+async Task EnsureRolesCreatedAsync(WebApplication app)
+{
+    using var scope = app.Services.CreateScope();
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    string[] roles = new[] { "Admin", "Manager", "Checker", "Member" };
+    foreach (var role in roles)
+    {
+        if (!await roleManager.RoleExistsAsync(role))
+        {
+            await roleManager.CreateAsync(new IdentityRole(role));
+            Console.WriteLine($"✅ Role '{role}' created.");
+        }
+    }
+}
+
+// ------------------ PIPELINE ------------------
 
 if (app.Environment.IsDevelopment())
 {
@@ -149,11 +170,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+await EnsureRolesCreatedAsync(app);
+
 app.UseHttpsRedirection();
-app.UseCors("AllowAll");
-
-app.UseAuthentication(); // ✅ REQUIRED before authorization
+app.UseCors("AllowFrontend");
+app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
 app.Run();

@@ -26,25 +26,34 @@ namespace SonicPoints.Controllers
             _configuration = configuration;
         }
 
-        // 🔒 Test Protected Route
+        // 🔒 Protected route test
         [Authorize]
         [HttpGet("protected")]
         public IActionResult ProtectedRoute()
         {
-            return Ok(new { message = "You are authorized!" });
+            var identity = User.Identity;
+            var claims = User.Claims.Select(c => new { c.Type, c.Value });
+
+            return Ok(new
+            {
+                IsAuthenticated = identity?.IsAuthenticated,
+                identity?.Name,
+                Claims = claims
+            });
         }
 
-        // 📝 User Registration
+
+
+        // 📝 Register
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto model)
         {
             var existingUser = await _userManager.FindByEmailAsync(model.Email);
             if (existingUser != null)
-            {
                 return Ok(new { success = false, message = "User with this email already exists" });
-            }
 
-            if (!ModelState.IsValid) return BadRequest(ModelState);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
             var user = new User
             {
@@ -56,11 +65,13 @@ namespace SonicPoints.Controllers
             if (!result.Succeeded)
                 return BadRequest(result.Errors);
 
+            // ✅ Assign default identity-level role
+            await _userManager.AddToRoleAsync(user, "Member");
+
             return Ok(new { success = true, message = "User registered successfully!" });
         }
 
-        // 🔐 User Login & JWT Token Generation
-        // 🔐 User Login & JWT Token Generation
+        // 🔐 Login + Token
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto model)
         {
@@ -72,44 +83,46 @@ namespace SonicPoints.Controllers
             if (!result.Succeeded)
                 return Unauthorized(new { success = false, message = "Invalid Password" });
 
-            var token = await GenerateJwtToken(user); // ✅ use await version now
-            return Ok(new { success = true, message = "Login Successful", token });
-        }
+            var token = await GenerateJwtToken(user);
 
+            return Ok(new
+            {
+                success = true,
+                message = "Login successful",
+                token
+            });
+        }
 
         // 🔑 JWT Token Generator
         private async Task<string> GenerateJwtToken(User user)
         {
             var jwtSettings = _configuration.GetSection("Jwt");
-
             var rawKey = Convert.FromBase64String(jwtSettings["Key"]);
             var key = new SymmetricSecurityKey(rawKey);
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var claims = new List<Claim>
-    {
-        new Claim(JwtRegisteredClaimNames.Sub, user.Id),
-        new Claim(ClaimTypes.NameIdentifier, user.Id),
-        new Claim(ClaimTypes.Name, user.UserName),
-        new Claim(JwtRegisteredClaimNames.Email, user.Email),
-        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-    };
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id),
+                new Claim(ClaimTypes.NameIdentifier, user.Id),
+                new Claim(ClaimTypes.Name, user.UserName),
+                new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
 
-            // ✅ Add this block to include roles
+            // ✅ Add role claims
             var roles = await _userManager.GetRolesAsync(user);
             claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
 
             var token = new JwtSecurityToken(
                 issuer: jwtSettings["Issuer"],
                 audience: jwtSettings["Audience"],
-                expires: DateTime.UtcNow.AddMinutes(Convert.ToDouble(jwtSettings["ExpiryInMinutes"])),
                 claims: claims,
+                expires: DateTime.UtcNow.AddMinutes(Convert.ToDouble(jwtSettings["ExpiryInMinutes"])),
                 signingCredentials: credentials
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
-
-
     }
 }
