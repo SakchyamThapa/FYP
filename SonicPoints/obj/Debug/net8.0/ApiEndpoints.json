@@ -169,20 +169,41 @@
   },
   {
     "ContainingType": "SonicPoints.Controllers.ProjectController",
-    "Method": "AssignRoleToUser",
-    "RelativePath": "api/projects/{id}/assign-role",
-    "HttpMethod": "POST",
+    "Method": "ChangeUserRole",
+    "RelativePath": "api/projects/{projectId}/change-role",
+    "HttpMethod": "PUT",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "id",
+        "Name": "projectId",
         "Type": "System.Int32",
         "IsRequired": true
       },
       {
-        "Name": "assignUserRoleDto",
-        "Type": "SonicPoints.DTOs.AssignUserRoleDto",
+        "Name": "dto",
+        "Type": "SonicPoints.Dto.ChangeRoleDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SonicPoints.Controllers.ProjectController",
+    "Method": "RemoveUserFromProject",
+    "RelativePath": "api/projects/{projectId}/remove-user/{targetUserId}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "projectId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "targetUserId",
+        "Type": "System.String",
         "IsRequired": true
       }
     ],

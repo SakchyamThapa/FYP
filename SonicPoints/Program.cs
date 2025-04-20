@@ -2,12 +2,13 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using SonicPoints.Data;
 using SonicPoints.Models;
 using SonicPoints.Repositories;
-using System.Text;
-using Microsoft.OpenApi.Models;
+using SonicPoints.Services;
 using System.Security.Claims;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,51 +24,58 @@ builder.Services.AddIdentity<User, IdentityRole>()
 // ------------------ JWT CONFIG ------------------
 
 var jwtSettings = builder.Configuration.GetSection("Jwt");
-var rawKey = Convert.FromBase64String(jwtSettings["Key"]);
+var utf8Key = Encoding.UTF8.GetBytes(jwtSettings["Key"]); // ✅ Use UTF8, not Base64
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.TokenValidationParameters = new TokenValidationParameters
     {
-        options.RequireHttpsMetadata = false;
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtSettings["Issuer"],
-            ValidAudience = jwtSettings["Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(rawKey),
-            NameClaimType = ClaimTypes.NameIdentifier,
-            RoleClaimType = ClaimTypes.Role,
-            ClockSkew = TimeSpan.FromSeconds(30)
-        };
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(utf8Key), // ✅ Corrected key
+        NameClaimType = ClaimTypes.NameIdentifier,
+        RoleClaimType = ClaimTypes.Role,
+        ClockSkew = TimeSpan.FromMinutes(1)
+    };
 
-        options.Events = new JwtBearerEvents
+    options.Events = new JwtBearerEvents
+    {
+        OnAuthenticationFailed = context =>
         {
-            OnAuthenticationFailed = context =>
-            {
-                Console.WriteLine("❌ AUTHENTICATION FAILED: " + context.Exception.Message);
-                return Task.CompletedTask;
-            },
-            OnMessageReceived = context =>
-            {
-                Console.WriteLine("📨 TOKEN RECEIVED: " + context.Token);
-                return Task.CompletedTask;
-            },
-            OnTokenValidated = context =>
-            {
-                var userId = context.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                Console.WriteLine($"✅ AUTH SUCCESS: Token validated for userId = {userId}");
-                return Task.CompletedTask;
-            },
-            OnChallenge = context =>
-            {
-                Console.WriteLine("🚫 CHALLENGE: " + context.AuthenticateFailure?.Message);
-                return Task.CompletedTask;
-            }
-        };
-    });
+            Console.WriteLine("❌ AUTHENTICATION FAILED: " + context.Exception.Message);
+            return Task.CompletedTask;
+        },
+        OnMessageReceived = context =>
+        {
+            Console.WriteLine("📨 TOKEN RECEIVED: " + (context.Token ?? "NONE"));
+            return Task.CompletedTask;
+        },
+        OnTokenValidated = context =>
+        {
+            var userId = context.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var username = context.Principal.Identity?.Name;
+            var roles = context.Principal.FindAll(ClaimTypes.Role).Select(r => r.Value);
+            Console.WriteLine($"✅ AUTH SUCCESS: userId = {userId}, username = {username}");
+            Console.WriteLine("Roles: " + string.Join(", ", roles));
+            return Task.CompletedTask;
+        },
+        OnChallenge = context =>
+        {
+            Console.WriteLine("🚫 JWT CHALLENGE: " + context.AuthenticateFailure?.Message);
+            return Task.CompletedTask;
+        }
+    };
+});
 
 // ------------------ COOKIE REDIRECT OVERRIDE ------------------
 
@@ -93,11 +101,12 @@ builder.Services.AddSwaggerGen(c =>
 
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Description = "Enter 'Bearer {your token}'",
+        Description = "Enter 'Bearer {your JWT token}'",
         Name = "Authorization",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.Http,
-        Scheme = "Bearer"
+        Scheme = "Bearer",
+        BearerFormat = "JWT"
     });
 
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -131,16 +140,15 @@ builder.Services.AddCors(options =>
 
 // ------------------ DEPENDENCY INJECTION ------------------
 
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 builder.Services.AddScoped<ITaskRepository, TaskRepository>();
 builder.Services.AddScoped<IRewardRepository, RewardRepository>();
 builder.Services.AddScoped<ILeaderboardRepository, LeaderboardRepository>();
-builder.Services.AddScoped<IRedeemableItemRepository, RedeemableItemRepository>();
+builder.Services.AddScoped<IProjectAuthorizationService, ProjectAuthorizationService>();
 builder.Services.AddMemoryCache();
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(); // Avoid duplicate call
 
 var app = builder.Build();
 
@@ -150,7 +158,7 @@ async Task EnsureRolesCreatedAsync(WebApplication app)
 {
     using var scope = app.Services.CreateScope();
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    string[] roles = new[] { "Admin", "Manager", "Checker", "Member" };
+    string[] roles = { "Admin", "Manager", "Checker", "Member" };
     foreach (var role in roles)
     {
         if (!await roleManager.RoleExistsAsync(role))
@@ -174,7 +182,8 @@ await EnsureRolesCreatedAsync(app);
 
 app.UseHttpsRedirection();
 app.UseCors("AllowFrontend");
-app.UseAuthentication();
+app.UseAuthentication(); // 🔐 Required before UseAuthorization
 app.UseAuthorization();
+
 app.MapControllers();
 app.Run();

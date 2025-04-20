@@ -1,30 +1,39 @@
-﻿
-
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using SonicPoints.Data;
+using SonicPoints.Dto;
 using SonicPoints.DTOs;
 using SonicPoints.Models;
 using SonicPoints.Repositories;
+using SonicPoints.Services;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using System.Linq;
-using Microsoft.EntityFrameworkCore;
 
 namespace SonicPoints.Controllers
 {
     [Route("api/projects")]
     [ApiController]
-    [Authorize] // Requires authentication for all endpoints
+    [Authorize]
     public class ProjectController : ControllerBase
     {
         private readonly IProjectRepository _projectRepository;
         private readonly UserManager<User> _userManager;
+        private readonly IProjectAuthorizationService _projectAuthorization;
+        private readonly AppDbContext _context;
 
-        public ProjectController(IProjectRepository projectRepository, UserManager<User> userManager)
+        public ProjectController(
+            IProjectRepository projectRepository,
+            UserManager<User> userManager,
+            IProjectAuthorizationService projectAuthorization,
+            AppDbContext context)
         {
             _projectRepository = projectRepository;
             _userManager = userManager;
+            _projectAuthorization = projectAuthorization;
+            _context = context;
         }
 
         [HttpGet]
@@ -74,8 +83,6 @@ namespace SonicPoints.Controllers
         public async Task<IActionResult> CreateProject([FromBody] CreateProjectDto createProjectDto)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId))
-                return Unauthorized("Invalid token.");
 
             var project = new Project
             {
@@ -102,10 +109,13 @@ namespace SonicPoints.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> UpdateProject(int id, [FromBody] UpdateProjectDto updateProjectDto)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (!await _projectAuthorization.HasProjectRoleAsync(userId, id, "Admin", "Manager"))
+                return Forbid("You are not authorized to update this project.");
+
             var project = await _projectRepository.UpdateProjectAsync(id, userId, updateProjectDto);
 
             if (project == null)
@@ -123,10 +133,13 @@ namespace SonicPoints.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteProject(int id)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (!await _projectAuthorization.HasProjectRoleAsync(userId, id, "Admin"))
+                return Forbid("Only project Admins can delete this project.");
+
             var success = await _projectRepository.DeleteProjectAsync(id, userId);
 
             if (!success)
@@ -136,10 +149,13 @@ namespace SonicPoints.Controllers
         }
 
         [HttpPost("{id}/add-user")]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AddUserToProject(int id, [FromBody] string userEmail)
         {
             var adminId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (!await _projectAuthorization.HasProjectRoleAsync(adminId, id, "Admin"))
+                return Forbid("Only project Admins can add users.");
+
             var success = await _projectRepository.AddUserToProjectAsync(id, adminId, userEmail);
 
             if (!success)
@@ -148,24 +164,44 @@ namespace SonicPoints.Controllers
             return Ok("User added successfully.");
         }
 
-        [HttpPost("{id}/assign-role")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> AssignRoleToUser(int id, [FromBody] AssignUserRoleDto assignUserRoleDto)
+        [HttpPut("{projectId}/change-role")]
+        public async Task<IActionResult> ChangeUserRole(int projectId, [FromBody] ChangeRoleDto dto)
         {
-            var project = await _projectRepository.GetProjectByIdAsync(id, assignUserRoleDto.AdminId);
-            if (project == null)
-                return NotFound("Project not found or you don't have permission to add users.");
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            var user = await _userManager.FindByIdAsync(assignUserRoleDto.UserId);
+            if (!await _projectAuthorization.HasProjectRoleAsync(userId, projectId, "Admin"))
+                return Forbid("Only project Admins can change roles.");
+
+            var user = await _context.ProjectUsers
+                .FirstOrDefaultAsync(pu => pu.UserId == dto.TargetUserId && pu.ProjectId == projectId);
+
             if (user == null)
-                return NotFound("User not found.");
+                return NotFound("User not found in project.");
 
-            var success = await _projectRepository.AddUserToProjectAsync(id, assignUserRoleDto.AdminId, assignUserRoleDto.UserId);
+            user.Role = dto.NewRole;
+            await _context.SaveChangesAsync();
 
-            if (!success)
-                return BadRequest("Failed to add user to project.");
+            return Ok("Role updated.");
+        }
 
-            return Ok("User role assigned successfully.");
+        [HttpDelete("{projectId}/remove-user/{targetUserId}")]
+        public async Task<IActionResult> RemoveUserFromProject(int projectId, string targetUserId)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (!await _projectAuthorization.HasProjectRoleAsync(userId, projectId, "Admin"))
+                return Forbid("Only project Admins can remove users.");
+
+            var user = await _context.ProjectUsers
+                .FirstOrDefaultAsync(pu => pu.UserId == targetUserId && pu.ProjectId == projectId);
+
+            if (user == null)
+                return NotFound("User not found in project.");
+
+            _context.ProjectUsers.Remove(user);
+            await _context.SaveChangesAsync();
+
+            return Ok("User removed.");
         }
     }
 }

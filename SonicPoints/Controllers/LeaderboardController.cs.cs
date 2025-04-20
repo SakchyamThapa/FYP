@@ -24,7 +24,6 @@ namespace SonicPoints.Controllers
 
         // ✅ Get Leaderboard by Project with Pagination and Caching
         [HttpGet("{projectId}")]
-        [Authorize]
         public async Task<IActionResult> GetLeaderboard(int projectId, int pageNumber = 1, int pageSize = 10)
         {
             string cacheKey = $"leaderboard_{projectId}_page_{pageNumber}_size_{pageSize}";

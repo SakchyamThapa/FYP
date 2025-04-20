@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using SonicPoints.DTOs;
 using SonicPoints.Models;
 using SonicPoints.Repositories;
+using SonicPoints.Services;
 using System.Security.Claims;
 using System.Linq;
 using System.Threading.Tasks;
@@ -18,12 +19,18 @@ namespace SonicPoints.Controllers
         private readonly IRewardRepository _rewardRepository;
         private readonly ILeaderboardRepository _leaderboardRepository;
         private readonly IProjectRepository _projectRepository;
+        private readonly IProjectAuthorizationService _projectAuthorization;
 
-        public RewardController(IRewardRepository rewardRepository, ILeaderboardRepository leaderboardRepository, IProjectRepository projectRepository)
+        public RewardController(
+            IRewardRepository rewardRepository,
+            ILeaderboardRepository leaderboardRepository,
+            IProjectRepository projectRepository,
+            IProjectAuthorizationService projectAuthorization)
         {
             _rewardRepository = rewardRepository;
             _leaderboardRepository = leaderboardRepository;
             _projectRepository = projectRepository;
+            _projectAuthorization = projectAuthorization;
         }
 
         // ✅ Redeem a reward
@@ -31,27 +38,33 @@ namespace SonicPoints.Controllers
         public async Task<IActionResult> RedeemReward([FromBody] RedeemDto redeemDto)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var redeemableItem = await _rewardRepository.GetRedeemableItemByIdAsync(redeemDto.RedeemableItemId, redeemDto.ProjectId);
 
+            if (!await _projectAuthorization.HasProjectRoleAsync(userId, redeemDto.ProjectId, "Admin", "Manager", "Member"))
+                return Forbid("You are not authorized to redeem rewards in this project.");
+
+            var redeemableItem = await _rewardRepository.GetRedeemableItemByIdAsync(redeemDto.RedeemableItemId, redeemDto.ProjectId);
             if (redeemableItem == null)
                 return NotFound("Reward item not found for this project.");
 
-            // Fetch total points for the user in the project (after awaiting the task)
             var leaderboard = await _leaderboardRepository.GetLeaderboardByProjectAsync(redeemDto.ProjectId);
-            var userPoints = leaderboard.Where(l => l.UserId == userId).Sum(l => l.PointsEarned); // Corrected after awaiting
+            var userEntries = leaderboard.Where(l => l.UserId == userId).OrderByDescending(l => l.PointsEarned).ToList();
+            var userPoints = userEntries.Sum(l => l.PointsEarned);
 
             if (userPoints < redeemableItem.Cost)
                 return BadRequest("Not enough points to redeem this reward.");
 
-            // Deduct points and update leaderboard
-            var leaderboardEntry = await _leaderboardRepository.GetLeaderboardEntry(redeemDto.RedeemableItemId, userId);
-            if (leaderboardEntry != null)
+            int remainingCost = redeemableItem.Cost;
+            foreach (var entry in userEntries)
             {
-                leaderboardEntry.PointsEarned -= redeemableItem.Cost;
-                await _leaderboardRepository.UpdateLeaderboardEntry(leaderboardEntry);
+                if (remainingCost <= 0) break;
+
+                int deduct = System.Math.Min(entry.PointsEarned, remainingCost);
+                entry.PointsEarned -= deduct;
+                remainingCost -= deduct;
+
+                await _leaderboardRepository.UpdateLeaderboardEntry(entry);
             }
 
-            // Save redeem history
             var redeemHistory = new RedeemHistory
             {
                 UserId = userId,
@@ -66,12 +79,15 @@ namespace SonicPoints.Controllers
             return Ok("Reward redeemed successfully!");
         }
 
-
-        // ✅ Get Redeemed Rewards History (Admin only)
+        // ✅ Get Redeemed Rewards History (project-admin only)
         [HttpGet("redeemed/{projectId}")]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetRedeemedRewards(int projectId)
         {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (!await _projectAuthorization.HasProjectRoleAsync(userId, projectId, "Admin"))
+                return Forbid("Only project Admins can access redemption history.");
+
             var redeemedRewards = await _rewardRepository.GetRedeemedHistoryByProjectAsync(projectId);
             if (redeemedRewards == null || !redeemedRewards.Any())
                 return NotFound("No redeemed rewards found for this project.");

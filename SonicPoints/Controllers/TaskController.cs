@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using SonicPoints.DTOs;
 using SonicPoints.Models;
 using SonicPoints.Repositories;
+using SonicPoints.Services;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
@@ -16,12 +17,18 @@ namespace SonicPoints.Controllers
         private readonly ITaskRepository _taskRepository;
         private readonly ILeaderboardRepository _leaderboardRepository;
         private readonly IProjectRepository _projectRepository;
+        private readonly IProjectAuthorizationService _projectAuthorization;
 
-        public TaskController(ITaskRepository taskRepository, ILeaderboardRepository leaderboardRepository, IProjectRepository projectRepository)
+        public TaskController(
+            ITaskRepository taskRepository,
+            ILeaderboardRepository leaderboardRepository,
+            IProjectRepository projectRepository,
+            IProjectAuthorizationService projectAuthorization)
         {
             _taskRepository = taskRepository;
             _leaderboardRepository = leaderboardRepository;
             _projectRepository = projectRepository;
+            _projectAuthorization = projectAuthorization;
         }
 
         // ✅ Create Task
@@ -29,21 +36,22 @@ namespace SonicPoints.Controllers
         public async Task<IActionResult> CreateTask([FromBody] CreateTaskDto createTaskDto)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!await _projectAuthorization.HasProjectRoleAsync(userId, createTaskDto.ProjectId, "Admin", "Manager"))
+                return Forbid("You are not authorized to create tasks in this project.");
 
             var task = new TaskItem
             {
                 Title = createTaskDto.Title,
                 Description = createTaskDto.Description,
-                Status = ProjectTaskStatus.Backlog, // Default status is Backlog
+                Status = ProjectTaskStatus.Backlog,
                 ProjectId = createTaskDto.ProjectId,
                 RewardPoints = createTaskDto.RewardPoints,
                 AssignedDate = DateTime.UtcNow,
                 DueDate = createTaskDto.DueDate,
-                UserId = userId // Assigned to the user who created it initially
+                UserId = userId
             };
 
             var createdTask = await _taskRepository.CreateTaskAsync(task, userId);
-
             return CreatedAtAction(nameof(GetTaskById), new { taskId = createdTask.Id }, createdTask);
         }
 
@@ -57,19 +65,14 @@ namespace SonicPoints.Controllers
             if (task == null)
                 return NotFound("Task not found.");
 
-            var role = await _projectRepository.GetUserRoleInProjectAsync(task.ProjectId, userId);
-            if (string.IsNullOrEmpty(role))
-                return Unauthorized("You are not part of this project.");
-
-            // Role-based rule
-            if (updateTaskDto.Status == (int)ProjectTaskStatus.Completed &&
-                !(role == "Admin" || role == "Manager" || role == "Checker"))
+            if (updateTaskDto.Status == (int)ProjectTaskStatus.Completed)
             {
-                return Forbid("Only Admins, Managers, or Checkers can move a task to Completed.");
+                var allowed = await _projectAuthorization.HasProjectRoleAsync(userId, task.ProjectId, "Admin", "Manager", "Checker");
+                if (!allowed)
+                    return Forbid("Only Admins, Managers, or Checkers can move a task to Completed.");
             }
 
             task.Status = (ProjectTaskStatus)updateTaskDto.Status;
-
             var updated = await _taskRepository.UpdateTaskStatusAsync(task);
             if (!updated)
                 return BadRequest("Failed to update task status.");
@@ -82,13 +85,13 @@ namespace SonicPoints.Controllers
         public async Task<IActionResult> CheckTaskCompletion(int taskId)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
             var task = await _taskRepository.GetTaskByIdAsync(taskId);
+
             if (task == null || task.Status != ProjectTaskStatus.Review)
                 return BadRequest("Task not found or not in Review status.");
 
-            var role = await _projectRepository.GetUserRoleInProjectAsync(task.ProjectId, userId);
-            if (string.IsNullOrEmpty(role) || !(role == "Admin" || role == "Manager" || role == "Checker"))
+            var authorized = await _projectAuthorization.HasProjectRoleAsync(userId, task.ProjectId, "Admin", "Manager", "Checker");
+            if (!authorized)
                 return Forbid("Only Admins, Managers, or Checkers can complete tasks.");
 
             task.Status = ProjectTaskStatus.Completed;

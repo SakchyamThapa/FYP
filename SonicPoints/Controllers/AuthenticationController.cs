@@ -3,11 +3,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using SonicPoints.Models;
 using SonicPoints.DTOs;
+using SonicPoints.Dto;
+using Microsoft.AspNetCore.Authorization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using SonicPoints.Dto;
-using Microsoft.AspNetCore.Authorization;
 
 namespace SonicPoints.Controllers
 {
@@ -19,30 +19,32 @@ namespace SonicPoints.Controllers
         private readonly SignInManager<User> _signInManager;
         private readonly IConfiguration _configuration;
 
-        public AuthenticationController(UserManager<User> userManager, SignInManager<User> signInManager, IConfiguration configuration)
+        public AuthenticationController(
+            UserManager<User> userManager,
+            SignInManager<User> signInManager,
+            IConfiguration configuration)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _configuration = configuration;
         }
 
-        // 🔒 Protected route test
+        // 🔒 Protected route
         [Authorize]
         [HttpGet("protected")]
         public IActionResult ProtectedRoute()
         {
-            var identity = User.Identity;
-            var claims = User.Claims.Select(c => new { c.Type, c.Value });
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var roles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
 
             return Ok(new
             {
-                IsAuthenticated = identity?.IsAuthenticated,
-                identity?.Name,
-                Claims = claims
+                message = "✅ You are authorized!",
+                userId,
+                userName = User.Identity?.Name,
+                roles
             });
         }
-
-
 
         // 📝 Register
         [HttpPost("register")]
@@ -65,13 +67,12 @@ namespace SonicPoints.Controllers
             if (!result.Succeeded)
                 return BadRequest(result.Errors);
 
-            // ✅ Assign default identity-level role
             await _userManager.AddToRoleAsync(user, "Member");
 
-            return Ok(new { success = true, message = "User registered successfully!" });
+            return Ok(new { success = true, message = "User registered successfully!", role = "Member" });
         }
 
-        // 🔐 Login + Token
+        // 🔐 Login and return JWT
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto model)
         {
@@ -93,12 +94,11 @@ namespace SonicPoints.Controllers
             });
         }
 
-        // 🔑 JWT Token Generator
+        // 🔑 Token Generator (UTF8 key)
         private async Task<string> GenerateJwtToken(User user)
         {
             var jwtSettings = _configuration.GetSection("Jwt");
-            var rawKey = Convert.FromBase64String(jwtSettings["Key"]);
-            var key = new SymmetricSecurityKey(rawKey);
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var claims = new List<Claim>
@@ -110,7 +110,6 @@ namespace SonicPoints.Controllers
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
-            // ✅ Add role claims
             var roles = await _userManager.GetRolesAsync(user);
             claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
 

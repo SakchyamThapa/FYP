@@ -287,14 +287,14 @@
         }
       }
     },
-    "/api/projects/{id}/assign-role": {
-      "post": {
+    "/api/projects/{projectId}/change-role": {
+      "put": {
         "tags": [
           "Project"
         ],
         "parameters": [
           {
-            "name": "id",
+            "name": "projectId",
             "in": "path",
             "required": true,
             "schema": {
@@ -307,21 +307,52 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AssignUserRoleDto"
+                "$ref": "#/components/schemas/ChangeRoleDto"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/AssignUserRoleDto"
+                "$ref": "#/components/schemas/ChangeRoleDto"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/AssignUserRoleDto"
+                "$ref": "#/components/schemas/ChangeRoleDto"
               }
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/remove-user/{targetUserId}": {
+      "delete": {
+        "tags": [
+          "Project"
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "targetUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -643,18 +674,14 @@
   },
   "components": {
     "schemas": {
-      "AssignUserRoleDto": {
+      "ChangeRoleDto": {
         "type": "object",
         "properties": {
-          "userId": {
+          "targetUserId": {
             "type": "string",
             "nullable": true
           },
-          "adminId": {
-            "type": "string",
-            "nullable": true
-          },
-          "role": {
+          "newRole": {
             "type": "string",
             "nullable": true
           }
@@ -821,8 +848,9 @@
     "securitySchemes": {
       "Bearer": {
         "type": "http",
-        "description": "Enter 'Bearer {your token}'",
-        "scheme": "Bearer"
+        "description": "Enter 'Bearer {your JWT token}'",
+        "scheme": "Bearer",
+        "bearerFormat": "JWT"
       }
     }
   },
