@@ -1,6 +1,26 @@
 [
   {
     "ContainingType": "SonicPoints.Controllers.AuthenticationController",
+    "Method": "AnalyzeToken",
+    "RelativePath": "api/auth/analyze-token",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SonicPoints.Controllers.AuthenticationController",
+    "Method": "DebugToken",
+    "RelativePath": "api/auth/debug",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SonicPoints.Controllers.AuthenticationController",
     "Method": "Login",
     "RelativePath": "api/auth/login",
     "HttpMethod": "POST",

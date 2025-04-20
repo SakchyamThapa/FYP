@@ -6,6 +6,7 @@ using Microsoft.OpenApi.Models;
 using SonicPoints.Data;
 using SonicPoints.Models;
 using SonicPoints.Repositories;
+using System.IdentityModel.Tokens.Jwt;
 using SonicPoints.Services;
 using System.Security.Claims;
 using System.Text;
@@ -24,8 +25,8 @@ builder.Services.AddIdentity<User, IdentityRole>()
 // ------------------ JWT CONFIG ------------------
 
 var jwtSettings = builder.Configuration.GetSection("Jwt");
-var utf8Key = Encoding.UTF8.GetBytes(jwtSettings["Key"]); // ✅ Use UTF8, not Base64
-
+var utf8Key = Encoding.UTF8.GetBytes(jwtSettings["Key"]);
+Console.WriteLine($"JWT Config: Issuer={jwtSettings["Issuer"]}, Audience={jwtSettings["Audience"]}, Key={jwtSettings["Key"]?.Substring(0, 3)}...");
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -34,6 +35,7 @@ builder.Services.AddAuthentication(options =>
 .AddJwtBearer(options =>
 {
     options.RequireHttpsMetadata = false;
+    options.SaveToken = true; // 👈 Add this line here
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
@@ -42,9 +44,10 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = jwtSettings["Issuer"],
         ValidAudience = jwtSettings["Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(utf8Key), // ✅ Corrected key
+        IssuerSigningKey = new SymmetricSecurityKey(utf8Key),
         NameClaimType = ClaimTypes.NameIdentifier,
         RoleClaimType = ClaimTypes.Role,
+
         ClockSkew = TimeSpan.FromMinutes(1)
     };
 
@@ -62,11 +65,10 @@ builder.Services.AddAuthentication(options =>
         },
         OnTokenValidated = context =>
         {
-            var userId = context.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var username = context.Principal.Identity?.Name;
-            var roles = context.Principal.FindAll(ClaimTypes.Role).Select(r => r.Value);
-            Console.WriteLine($"✅ AUTH SUCCESS: userId = {userId}, username = {username}");
-            Console.WriteLine("Roles: " + string.Join(", ", roles));
+            foreach (var claim in context.Principal.Claims)
+            {
+                Console.WriteLine($"CLAIM: {claim.Type} = {claim.Value}");
+            }
             return Task.CompletedTask;
         },
         OnChallenge = context =>
@@ -76,6 +78,7 @@ builder.Services.AddAuthentication(options =>
         }
     };
 });
+
 
 // ------------------ COOKIE REDIRECT OVERRIDE ------------------
 
@@ -148,11 +151,10 @@ builder.Services.AddScoped<IProjectAuthorizationService, ProjectAuthorizationSer
 builder.Services.AddMemoryCache();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(); // Avoid duplicate call
+
+// ------------------ APP START ------------------
 
 var app = builder.Build();
-
-// ------------------ ROLE SEEDING ------------------
 
 async Task EnsureRolesCreatedAsync(WebApplication app)
 {
@@ -169,8 +171,6 @@ async Task EnsureRolesCreatedAsync(WebApplication app)
     }
 }
 
-// ------------------ PIPELINE ------------------
-
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
@@ -181,9 +181,10 @@ if (app.Environment.IsDevelopment())
 await EnsureRolesCreatedAsync(app);
 
 app.UseHttpsRedirection();
+app.UseRouting(); // ✅ Add this if missing
 app.UseCors("AllowFrontend");
-app.UseAuthentication(); // 🔐 Required before UseAuthorization
+app.UseAuthentication(); // ✅ Before Authorization
 app.UseAuthorization();
-
 app.MapControllers();
+
 app.Run();

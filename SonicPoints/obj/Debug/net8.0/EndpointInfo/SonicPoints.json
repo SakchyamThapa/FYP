@@ -79,6 +79,30 @@
         }
       }
     },
+    "/api/auth/debug": {
+      "get": {
+        "tags": [
+          "Authentication"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/auth/analyze-token": {
+      "get": {
+        "tags": [
+          "Authentication"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/leaderboard/{projectId}": {
       "get": {
         "tags": [
