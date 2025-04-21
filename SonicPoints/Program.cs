@@ -6,7 +6,6 @@ using Microsoft.OpenApi.Models;
 using SonicPoints.Data;
 using SonicPoints.Models;
 using SonicPoints.Repositories;
-using System.IdentityModel.Tokens.Jwt;
 using SonicPoints.Services;
 using System.Security.Claims;
 using System.Text;
@@ -14,19 +13,24 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // ------------------ DATABASE & IDENTITY ------------------
-
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddIdentity<User, IdentityRole>()
-    .AddEntityFrameworkStores<AppDbContext>()
-    .AddDefaultTokenProviders();
+builder.Services.AddIdentity<User, IdentityRole>(options =>
+{
+    options.Password.RequireDigit = true;
+    options.Password.RequireLowercase = true;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireNonAlphanumeric = true;
+    options.Password.RequiredLength = 8;
+})
+.AddEntityFrameworkStores<AppDbContext>()
+.AddDefaultTokenProviders();
 
 // ------------------ JWT CONFIG ------------------
-
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var utf8Key = Encoding.UTF8.GetBytes(jwtSettings["Key"]);
-Console.WriteLine($"JWT Config: Issuer={jwtSettings["Issuer"]}, Audience={jwtSettings["Audience"]}, Key={jwtSettings["Key"]?.Substring(0, 3)}...");
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -35,83 +39,65 @@ builder.Services.AddAuthentication(options =>
 .AddJwtBearer(options =>
 {
     options.RequireHttpsMetadata = false;
-    options.SaveToken = true; // 👈 Add this line here
+    options.SaveToken = true;
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtSettings["Issuer"],
-        ValidAudience = jwtSettings["Audience"],
+        ValidIssuer = jwtSettings.GetValue<string>("Issuer") ?? "https://localhost:7150",
+        ValidAudience = jwtSettings.GetValue<string>("Audience") ?? "https://localhost:7150",
         IssuerSigningKey = new SymmetricSecurityKey(utf8Key),
+        ClockSkew = TimeSpan.FromSeconds(30),
         NameClaimType = ClaimTypes.NameIdentifier,
-        RoleClaimType = ClaimTypes.Role,
-
-        ClockSkew = TimeSpan.FromMinutes(1)
+        RoleClaimType = ClaimTypes.Role
     };
-
     options.Events = new JwtBearerEvents
     {
         OnAuthenticationFailed = context =>
         {
-            Console.WriteLine("❌ AUTHENTICATION FAILED: " + context.Exception.Message);
-            return Task.CompletedTask;
-        },
-        OnMessageReceived = context =>
-        {
-            Console.WriteLine("📨 TOKEN RECEIVED: " + (context.Token ?? "NONE"));
+            Console.WriteLine($"❌ AUTH FAILED: {context.Exception.Message}");
             return Task.CompletedTask;
         },
         OnTokenValidated = context =>
         {
-            foreach (var claim in context.Principal.Claims)
-            {
-                Console.WriteLine($"CLAIM: {claim.Type} = {claim.Value}");
-            }
+            Console.WriteLine("✅ TOKEN VALIDATED");
             return Task.CompletedTask;
         },
         OnChallenge = context =>
         {
-            Console.WriteLine("🚫 JWT CHALLENGE: " + context.AuthenticateFailure?.Message);
+            Console.WriteLine($"⚠️ JWT CHALLENGE: {context.AuthenticateFailure?.Message}");
             return Task.CompletedTask;
         }
     };
 });
 
+builder.Services.AddAuthorization();
 
-// ------------------ COOKIE REDIRECT OVERRIDE ------------------
-
-builder.Services.ConfigureApplicationCookie(options =>
+builder.Services.AddCors(options =>
 {
-    options.Events.OnRedirectToLogin = context =>
+    options.AddPolicy("AllowFrontend", policy =>
     {
-        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-        return Task.CompletedTask;
-    };
-    options.Events.OnRedirectToAccessDenied = context =>
-    {
-        context.Response.StatusCode = StatusCodes.Status403Forbidden;
-        return Task.CompletedTask;
-    };
+        policy.WithOrigins("http://127.0.0.1:5500", "http://localhost:5500")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
 });
-
-// ------------------ SWAGGER CONFIG ------------------
 
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "SonicPoints API", Version = "v1" });
-
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Description = "Enter 'Bearer {your JWT token}'",
+        Description = "Enter 'Bearer {token}'",
         Name = "Authorization",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.Http,
         Scheme = "Bearer",
         BearerFormat = "JWT"
     });
-
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -128,31 +114,15 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// ------------------ CORS POLICY ------------------
-
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowFrontend", policy =>
-    {
-        policy.WithOrigins("http://127.0.0.1:5500")
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
-    });
-});
-
-// ------------------ DEPENDENCY INJECTION ------------------
-
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 builder.Services.AddScoped<ITaskRepository, TaskRepository>();
 builder.Services.AddScoped<IRewardRepository, RewardRepository>();
 builder.Services.AddScoped<ILeaderboardRepository, LeaderboardRepository>();
 builder.Services.AddScoped<IProjectAuthorizationService, ProjectAuthorizationService>();
+
 builder.Services.AddMemoryCache();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-
-// ------------------ APP START ------------------
 
 var app = builder.Build();
 
@@ -175,16 +145,19 @@ if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "SonicPoints API v1");
+        c.RoutePrefix = "swagger";
+    });
 }
 
 await EnsureRolesCreatedAsync(app);
 
 app.UseHttpsRedirection();
-app.UseRouting(); // ✅ Add this if missing
+app.UseRouting();
 app.UseCors("AllowFrontend");
-app.UseAuthentication(); // ✅ Before Authorization
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
-
 app.Run();

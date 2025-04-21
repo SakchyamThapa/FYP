@@ -79,18 +79,6 @@
         }
       }
     },
-    "/api/auth/debug": {
-      "get": {
-        "tags": [
-          "Authentication"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
     "/api/auth/analyze-token": {
       "get": {
         "tags": [
@@ -694,6 +682,35 @@
           }
         }
       }
+    },
+    "/api/Test/test": {
+      "get": {
+        "tags": [
+          "Test"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -872,7 +889,7 @@
     "securitySchemes": {
       "Bearer": {
         "type": "http",
-        "description": "Enter 'Bearer {your JWT token}'",
+        "description": "Enter 'Bearer {token}'",
         "scheme": "Bearer",
         "bearerFormat": "JWT"
       }

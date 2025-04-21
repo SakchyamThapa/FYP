@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SonicPoints")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3f353ad1b66c08893fa53ca0f77ef210016df695")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c4b5e3ec2d9c791343ec9edcc34d31b870dd68ba")]
 [assembly: System.Reflection.AssemblyProductAttribute("SonicPoints")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SonicPoints")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

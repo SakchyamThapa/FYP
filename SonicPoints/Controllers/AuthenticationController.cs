@@ -49,12 +49,12 @@ namespace SonicPoints.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto model)
         {
-            var existingUser = await _userManager.FindByEmailAsync(model.Email);
-            if (existingUser != null)
-                return Ok(new { success = false, message = "User with this email already exists" });
-
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
+
+            var existingUser = await _userManager.FindByEmailAsync(model.Email);
+            if (existingUser != null)
+                return BadRequest(new { success = false, message = "User with this email already exists" });
 
             var user = new User
             {
@@ -64,7 +64,7 @@ namespace SonicPoints.Controllers
 
             var result = await _userManager.CreateAsync(user, model.Password);
             if (!result.Succeeded)
-                return BadRequest(result.Errors);
+                return BadRequest(new { success = false, errors = result.Errors });
 
             await _userManager.AddToRoleAsync(user, "Member");
 
@@ -76,11 +76,11 @@ namespace SonicPoints.Controllers
         {
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null)
-                return Unauthorized(new { success = false, message = "Invalid Email" });
+                return Unauthorized(new { success = false, message = "Invalid email or password" });
 
             var result = await _signInManager.CheckPasswordSignInAsync(user, model.Password, false);
             if (!result.Succeeded)
-                return Unauthorized(new { success = false, message = "Invalid Password" });
+                return Unauthorized(new { success = false, message = "Invalid email or password" });
 
             var token = await GenerateJwtToken(user);
 
@@ -88,108 +88,94 @@ namespace SonicPoints.Controllers
             {
                 success = true,
                 message = "Login successful",
-                token
+                token,
+                userId = user.Id,
+                username = user.UserName,
+                email = user.Email
             });
         }
 
         private async Task<string> GenerateJwtToken(User user)
         {
-            var jwtSettings = _configuration.GetSection("Jwt");
-            // ✅ Ensure fallback if settings are null
-            var issuer = jwtSettings["Issuer"] ?? "https://localhost:7150";
-            var audience = jwtSettings["Audience"] ?? "https://localhost:7150";
-            var key = jwtSettings["Key"];
-            var expirySetting = jwtSettings["ExpiryInMinutes"];
-            var expiryMinutes = double.TryParse(expirySetting, out var mins) && mins > 0 ? mins : 60;
-            var expiresAt = DateTime.UtcNow.AddMinutes(expiryMinutes);
+            var issuer = _configuration.GetValue<string>("Jwt:Issuer") ?? "https://localhost:7150";
+            var audience = _configuration.GetValue<string>("Jwt:Audience") ?? "https://localhost:7150";
+            var key = _configuration.GetValue<string>("Jwt:Key");
+            var expiryMinutes = _configuration.GetValue<int>("Jwt:ExpiryInMinutes");
+
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
+            var now = DateTime.UtcNow;
+            var expires = now.AddMinutes(expiryMinutes);
+
             var claims = new List<Claim>
     {
+        new Claim(JwtRegisteredClaimNames.Sub, user.Id),
         new Claim(ClaimTypes.NameIdentifier, user.Id),
-        new Claim(ClaimTypes.Name, user.UserName),
-        new Claim(JwtRegisteredClaimNames.Email, user.Email),
-        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-        // Remove issuer and audience from claims - they're set in token descriptor
+        new Claim(ClaimTypes.Name, user.UserName ?? ""),
+        new Claim(JwtRegisteredClaimNames.Email, user.Email ?? ""),
+        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+        new Claim(JwtRegisteredClaimNames.Iat, new DateTimeOffset(now).ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
     };
 
             var roles = await _userManager.GetRolesAsync(user);
             claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
 
-            // Create JWT token directly instead of using descriptor
             var token = new JwtSecurityToken(
                 issuer: issuer,
                 audience: audience,
                 claims: claims,
-                notBefore: DateTime.UtcNow,
-                expires: expiresAt,
+                notBefore: now,
+                expires: expires,
                 signingCredentials: credentials
             );
-
-            // Debug check
-            Console.WriteLine($"DEBUG - Token created with issuer={token.Issuer}, audience={token.Audiences?.FirstOrDefault()}");
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
 
-
-
-
-        [HttpGet("debug")]
-        public IActionResult DebugToken()
-        {
-            var headers = Request.Headers;
-            if (headers.ContainsKey("Authorization"))
-            {
-                var token = headers["Authorization"].ToString().Replace("Bearer ", "");
-                return Ok(new { receivedToken = token });
-            }
-            return BadRequest("No token found");
-        }
-
         [HttpGet("analyze-token")]
         public IActionResult AnalyzeToken()
         {
             if (!Request.Headers.TryGetValue("Authorization", out var bearerToken))
-                return Unauthorized("No Authorization header");
+                return Unauthorized(new { success = false, message = "No Authorization header found" });
 
             var tokenStr = bearerToken.ToString().Replace("Bearer ", "").Trim();
+            var jwtSettings = _configuration.GetSection("Jwt");
 
             try
             {
-                // Try to read the token without validation
                 var handler = new JwtSecurityTokenHandler();
-                if (handler.CanReadToken(tokenStr))
-                {
-                    var jwtToken = handler.ReadJwtToken(tokenStr);
-
-                    // Extract token details
-                    return Ok(new
-                    {
-                        tokenValid = true,
-                        issuer = jwtToken.Issuer,
-                        audience = jwtToken.Audiences?.FirstOrDefault(),
-                        expiration = jwtToken.ValidTo,
-                        claims = jwtToken.Claims.Select(c => new {
-                            type = c.Type,
-                            value = c.Value
-                        })
-                    });
-                }
-                else
-                {
+                if (!handler.CanReadToken(tokenStr))
                     return BadRequest(new { tokenValid = false, message = "Token format is invalid" });
-                }
+
+                var validationParams = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = jwtSettings.GetValue<string>("Issuer") ?? "https://localhost:7150",
+                    ValidAudience = jwtSettings.GetValue<string>("Audience") ?? "https://localhost:7150",
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"])),
+                    ClockSkew = TimeSpan.FromMinutes(1)
+                };
+
+                ClaimsPrincipal principal = handler.ValidateToken(tokenStr, validationParams, out SecurityToken validatedToken);
+
+                return Ok(new
+                {
+                    tokenValid = true,
+                    issuer = ((JwtSecurityToken)validatedToken).Issuer,
+                    audience = ((JwtSecurityToken)validatedToken).Audiences.FirstOrDefault(),
+                    expiration = validatedToken.ValidTo,
+                    claims = principal.Claims.Select(c => new { type = c.Type, value = c.Value })
+                });
             }
             catch (Exception ex)
             {
                 return BadRequest(new { tokenValid = false, error = ex.Message });
             }
         }
-
-      
-
     }
 }
