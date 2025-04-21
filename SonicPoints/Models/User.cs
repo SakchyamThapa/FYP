@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace SonicPoints.Models
 {
+    [Index(nameof(Email), IsUnique = true)]
     public class User : IdentityUser
     {
         public List<TaskItem> Tasks { get; set; }

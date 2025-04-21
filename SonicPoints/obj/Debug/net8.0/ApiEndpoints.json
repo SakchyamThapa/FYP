@@ -11,6 +11,16 @@
   },
   {
     "ContainingType": "SonicPoints.Controllers.AuthenticationController",
+    "Method": "Debug",
+    "RelativePath": "api/auth/debug",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SonicPoints.Controllers.AuthenticationController",
     "Method": "Login",
     "RelativePath": "api/auth/login",
     "HttpMethod": "POST",

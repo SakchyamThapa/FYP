@@ -29,7 +29,7 @@ builder.Services.AddIdentity<User, IdentityRole>(options =>
 
 // ------------------ JWT CONFIG ------------------
 var jwtSettings = builder.Configuration.GetSection("Jwt");
-var utf8Key = Encoding.UTF8.GetBytes(jwtSettings["Key"]);
+var key = jwtSettings["Key"] ?? throw new InvalidOperationException("JWT key is missing in configuration!");
 
 builder.Services.AddAuthentication(options =>
 {
@@ -46,35 +46,19 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtSettings.GetValue<string>("Issuer") ?? "https://localhost:7150",
-        ValidAudience = jwtSettings.GetValue<string>("Audience") ?? "https://localhost:7150",
-        IssuerSigningKey = new SymmetricSecurityKey(utf8Key),
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
         ClockSkew = TimeSpan.FromSeconds(30),
-        NameClaimType = ClaimTypes.NameIdentifier,
+        NameClaimType = ClaimTypes.Name,
         RoleClaimType = ClaimTypes.Role
-    };
-    options.Events = new JwtBearerEvents
-    {
-        OnAuthenticationFailed = context =>
-        {
-            Console.WriteLine($"❌ AUTH FAILED: {context.Exception.Message}");
-            return Task.CompletedTask;
-        },
-        OnTokenValidated = context =>
-        {
-            Console.WriteLine("✅ TOKEN VALIDATED");
-            return Task.CompletedTask;
-        },
-        OnChallenge = context =>
-        {
-            Console.WriteLine($"⚠️ JWT CHALLENGE: {context.AuthenticateFailure?.Message}");
-            return Task.CompletedTask;
-        }
     };
 });
 
+// ------------------ AUTHORIZATION ------------------
 builder.Services.AddAuthorization();
 
+// ------------------ CORS ------------------
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
@@ -86,12 +70,13 @@ builder.Services.AddCors(options =>
     });
 });
 
+// ------------------ SWAGGER ------------------
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "SonicPoints API", Version = "v1" });
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Description = "Enter 'Bearer {token}'",
+        Description = "JWT Authorization header using Bearer scheme (e.g. 'Bearer {token}')",
         Name = "Authorization",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.Http,
@@ -114,6 +99,7 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+// ------------------ DEPENDENCIES ------------------
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 builder.Services.AddScoped<ITaskRepository, TaskRepository>();
 builder.Services.AddScoped<IRewardRepository, RewardRepository>();
@@ -126,6 +112,7 @@ builder.Services.AddEndpointsApiExplorer();
 
 var app = builder.Build();
 
+// ------------------ ROLE SEEDING ------------------
 async Task EnsureRolesCreatedAsync(WebApplication app)
 {
     using var scope = app.Services.CreateScope();
@@ -148,7 +135,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "SonicPoints API v1");
-        c.RoutePrefix = "swagger";
+        c.RoutePrefix = string.Empty; // Swagger at root
     });
 }
 
@@ -160,4 +147,6 @@ app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+Console.WriteLine("✅ SonicPoints API is running...");
 app.Run();

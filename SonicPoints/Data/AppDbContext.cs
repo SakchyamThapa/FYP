@@ -94,6 +94,10 @@ namespace SonicPoints.Data
                 .WithMany(u => u.ProjectUsers)
                 .HasForeignKey(pu => pu.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<User>()
+    .HasIndex(u => u.Email)
+    .IsUnique();
+
         }
     }
 }
