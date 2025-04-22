@@ -100,11 +100,11 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 // ------------------ DEPENDENCIES ------------------
-builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
-builder.Services.AddScoped<ITaskRepository, TaskRepository>();
-builder.Services.AddScoped<IRewardRepository, RewardRepository>();
-builder.Services.AddScoped<ILeaderboardRepository, LeaderboardRepository>();
-builder.Services.AddScoped<IProjectAuthorizationService, ProjectAuthorizationService>();
+builder.Services.AddTransient<IProjectRepository, ProjectRepository>();
+builder.Services.AddTransient<ITaskRepository, TaskRepository>();
+builder.Services.AddTransient<IRewardRepository, RewardRepository>();
+builder.Services.AddTransient<ILeaderboardRepository, LeaderboardRepository>();
+builder.Services.AddTransient<IProjectAuthorizationService, ProjectAuthorizationService>();
 
 builder.Services.AddMemoryCache();
 builder.Services.AddControllers();

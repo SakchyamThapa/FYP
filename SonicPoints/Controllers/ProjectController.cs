@@ -23,18 +23,35 @@ namespace SonicPoints.Controllers
         private readonly UserManager<User> _userManager;
         private readonly IProjectAuthorizationService _projectAuthorization;
         private readonly AppDbContext _context;
+      
 
         public ProjectController(
             IProjectRepository projectRepository,
             UserManager<User> userManager,
             IProjectAuthorizationService projectAuthorization,
+            
             AppDbContext context)
         {
             _projectRepository = projectRepository;
             _userManager = userManager;
             _projectAuthorization = projectAuthorization;
+           
             _context = context;
         }
+        [HttpGet("{projectId}/my-role")]
+        public async Task<IActionResult> GetMyRole(int projectId)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            var projectUser = await _context.ProjectUsers
+                .FirstOrDefaultAsync(pu => pu.ProjectId == projectId && pu.UserId == userId);
+
+            if (projectUser == null)
+                return NotFound("You are not part of this project.");
+
+            return Ok(new { role = projectUser.Role });
+        }
+
 
         [HttpGet]
         public async Task<IActionResult> GetUserProjects()
@@ -56,6 +73,29 @@ namespace SonicPoints.Controllers
 
             return Ok(projectDtos);
         }
+        [HttpGet("{projectId}/users")]
+        public async Task<IActionResult> GetProjectUsers(int projectId)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            var hasAccess = await _projectAuthorization.HasProjectRoleAsync(userId, projectId, "Admin", "Manager", "Checker");
+            if (!hasAccess)
+                return Forbid("Access denied.");
+
+            var users = await _context.ProjectUsers
+                .Where(pu => pu.ProjectId == projectId)
+                .Include(pu => pu.User)
+                .Select(pu => new {
+                    id = pu.UserId,
+                    name = pu.User.UserName,
+                    email = pu.User.Email,
+                    kpiPoints = pu.RewardPoints
+                })
+                .ToListAsync();
+
+            return Ok(users);
+        }
+
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetProject(int id)
@@ -183,6 +223,7 @@ namespace SonicPoints.Controllers
 
             return Ok("Role updated.");
         }
+        
 
         [HttpDelete("{projectId}/remove-user/{targetUserId}")]
         public async Task<IActionResult> RemoveUserFromProject(int projectId, string targetUserId)

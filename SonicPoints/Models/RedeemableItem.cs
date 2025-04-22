@@ -9,8 +9,10 @@ namespace SonicPoints.Models
         public int Cost { get; set; }  // Points required
         public int ProjectId { get; set; } // Only available in the specific project
 
-        // Make sure there's no [Required] here
+        public string ImageUrl { get; set; } // ✅ URL to the image file
+
         [JsonIgnore]
         public Project Project { get; set; }
     }
+
 }

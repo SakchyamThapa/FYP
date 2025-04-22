@@ -35,25 +35,35 @@ namespace SonicPoints.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateTask([FromBody] CreateTaskDto createTaskDto)
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!await _projectAuthorization.HasProjectRoleAsync(userId, createTaskDto.ProjectId, "Admin", "Manager"))
-                return Forbid("You are not authorized to create tasks in this project.");
-
-            var task = new TaskItem
+            try
             {
-                Title = createTaskDto.Title,
-                Description = createTaskDto.Description,
-                Status = ProjectTaskStatus.Backlog,
-                ProjectId = createTaskDto.ProjectId,
-                RewardPoints = createTaskDto.RewardPoints,
-                AssignedDate = DateTime.UtcNow,
-                DueDate = createTaskDto.DueDate,
-                UserId = userId
-            };
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (!await _projectAuthorization.HasProjectRoleAsync(userId, createTaskDto.ProjectId, "Admin", "Manager"))
+                    return Forbid("You are not authorized to create tasks in this project.");
 
-            var createdTask = await _taskRepository.CreateTaskAsync(task, userId);
-            return CreatedAtAction(nameof(GetTaskById), new { taskId = createdTask.Id }, createdTask);
+                var task = new TaskItem
+                {
+                    Title = createTaskDto.Title,
+                    Description = createTaskDto.Description,
+                    Status = ProjectTaskStatus.Backlog,
+                    Priority = createTaskDto.Priority,
+                    ProjectId = createTaskDto.ProjectId,
+                    RewardPoints = createTaskDto.RewardPoints,
+                    AssignedDate = DateTime.UtcNow,
+                    DueDate = createTaskDto.DueDate,
+                    UserId = userId
+                };
+
+                var createdTask = await _taskRepository.CreateTaskAsync(task, userId);
+                return CreatedAtAction(nameof(GetTaskById), new { taskId = createdTask.Id }, createdTask);
+            }
+            catch (Exception ex)
+            {
+                // 🔴 Add logging here
+                return StatusCode(500, $"Server error: {ex.Message}");
+            }
         }
+
 
         // ✅ Update Task Status
         [HttpPut("{taskId}/status")]
@@ -118,6 +128,147 @@ namespace SonicPoints.Controllers
             await _taskRepository.SaveAsync();
             return Ok("Task completed and points awarded.");
         }
+        // ✅ Get task status counts for a project (for dashboard overview)
+        [HttpGet("project/{projectId}/status-counts")]
+        public async Task<IActionResult> GetTaskStatusCounts(int projectId)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            // Verify user has access to this project
+            var hasAccess = await _projectAuthorization.HasProjectRoleAsync(userId, projectId, "Admin", "Manager", "Checker", "Member");
+            if (!hasAccess)
+                return Forbid("You do not have access to this project.");
+
+            var tasks = await _taskRepository.GetTasksByProjectIdAsync(projectId);
+
+            var counts = new
+            {
+                Backlog = tasks.Count(t => t.Status == ProjectTaskStatus.Backlog),
+                InProgress = tasks.Count(t => t.Status == ProjectTaskStatus.InProgress),
+                Review = tasks.Count(t => t.Status == ProjectTaskStatus.Review),
+                Completed = tasks.Count(t => t.Status == ProjectTaskStatus.Completed)
+            };
+
+            return Ok(counts);
+        }
+
+
+        [HttpPut("{taskId}")]
+        public async Task<IActionResult> EditTask(int taskId, [FromBody] EditTaskDto dto)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            var task = await _taskRepository.GetTaskByIdAsync(taskId);
+            if (task == null)
+                return NotFound("Task not found.");
+
+            // Only Admins and Managers can edit
+            var allowed = await _projectAuthorization.HasProjectRoleAsync(userId, task.ProjectId, "Admin", "Manager");
+            if (!allowed)
+                return Forbid("Not authorized to edit task.");
+
+            // Update fields
+            task.Title = dto.Title;
+            task.Description = dto.Description;
+            task.Priority = dto.Priority;
+            task.DueDate = dto.DueDate;
+
+            var updated = await _taskRepository.UpdateTaskAsync(task);
+            if (!updated)
+                return BadRequest("Failed to update task.");
+
+            return Ok(task);
+        }
+        [HttpPost("reorder")]
+        public async Task<IActionResult> ReorderTasks([FromBody] List<TaskOrderDto> list)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var updatedTasks = new List<TaskItem>();
+
+            foreach (var item in list)
+            {
+                var task = await _taskRepository.GetTaskByIdAsync(item.TaskId);
+                if (task == null) continue;
+
+                // Assign the task to the current user if it's being moved to InProgress or Review
+                if (item.NewStatus == ProjectTaskStatus.InProgress || item.NewStatus == ProjectTaskStatus.Review)
+                {
+                    task.UserId = userId;
+                }
+
+                // If a task is moved back to Backlog, remove assigned user
+                if (item.NewStatus == ProjectTaskStatus.Backlog)
+                {
+                    task.UserId = null;
+                }
+
+                task.Status = item.NewStatus;
+                await _taskRepository.UpdateTaskAsync(task);
+                updatedTasks.Add(task);
+            }
+
+            return Ok(updatedTasks);
+        }
+
+        [HttpGet("project/{projectId}/progress-trend")]
+        public async Task<IActionResult> GetProjectProgressTrend(int projectId)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            var hasAccess = await _projectAuthorization.HasProjectRoleAsync(userId, projectId, "Admin", "Manager", "Checker", "Member");
+            if (!hasAccess)
+                return Forbid();
+
+            var tasks = await _taskRepository.GetTasksByProjectIdAsync(projectId);
+
+            var trend = tasks
+                .Where(t => t.Status == ProjectTaskStatus.Completed)
+                .GroupBy(t => t.AssignedDate.Date)
+                .OrderBy(g => g.Key)
+                .Select(g => new {
+                    Date = g.Key.ToString("yyyy-MM-dd"),
+                    Count = g.Count()
+                });
+
+            return Ok(trend);
+        }
+
+
+
+        [HttpGet("project/{projectId}/analytics")]
+        public async Task<IActionResult> GetTaskAnalytics(int projectId)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var hasAccess = await _projectAuthorization.HasProjectRoleAsync(userId, projectId, "Admin", "Manager");
+            if (!hasAccess)
+                return Forbid();
+
+            var tasks = await _taskRepository.GetTasksByProjectIdAsync(projectId);
+            var grouped = tasks
+                .GroupBy(t => t.User?.Email ?? "Unassigned")
+                .Select(g => new {
+                    User = g.Key,
+                    TaskCount = g.Count(),
+                    Completed = g.Count(t => t.Status == ProjectTaskStatus.Completed)
+                });
+
+            return Ok(grouped);
+        }
+
+        [HttpGet("project/{projectId}")]
+        public async Task<IActionResult> GetTasksByProject(int projectId)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var authorized = await _projectAuthorization.HasProjectRoleAsync(userId, projectId, "Admin", "Manager", "Checker", "Member");
+            if (!authorized)
+                return Forbid();
+
+            var tasks = await _taskRepository.GetTasksByProjectIdAsync(projectId);
+            return Ok(tasks);
+        }
+       
+
+
 
         // ✅ Get Task by ID
         [HttpGet("{taskId}")]

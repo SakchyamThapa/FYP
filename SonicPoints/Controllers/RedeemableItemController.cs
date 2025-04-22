@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SonicPoints.Dto;
+using SonicPoints.Dto.SonicPoints.Dto;
 using SonicPoints.DTOs;
 using SonicPoints.Models;
 using SonicPoints.Repositories;
@@ -80,6 +81,7 @@ namespace SonicPoints.Controllers
 
             redeemableItem.Name = redeemableItemDto.Name;
             redeemableItem.Cost = redeemableItemDto.Cost;
+            redeemableItem.ImageUrl = redeemableItemDto.ImageUrl;
 
             var updatedItem = await _redeemableItemRepository.UpdateRedeemableItemAsync(redeemableItem);
 

@@ -210,6 +210,22 @@
   },
   {
     "ContainingType": "SonicPoints.Controllers.ProjectController",
+    "Method": "GetMyRole",
+    "RelativePath": "api/projects/{projectId}/my-role",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "projectId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SonicPoints.Controllers.ProjectController",
     "Method": "RemoveUserFromProject",
     "RelativePath": "api/projects/{projectId}/remove-user/{targetUserId}",
     "HttpMethod": "DELETE",
@@ -230,6 +246,22 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "SonicPoints.Controllers.ProjectController",
+    "Method": "GetProjectUsers",
+    "RelativePath": "api/projects/{projectId}/users",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "projectId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "SonicPoints.Controllers.RedeemableItemController",
     "Method": "CreateRedeemableItem",
     "RelativePath": "api/redeemableitems",
@@ -239,7 +271,7 @@
     "Parameters": [
       {
         "Name": "redeemableItemDto",
-        "Type": "SonicPoints.Dto.RedeemableItemDto",
+        "Type": "SonicPoints.Dto.SonicPoints.Dto.RedeemableItemDto",
         "IsRequired": true
       }
     ],
@@ -276,7 +308,7 @@
       },
       {
         "Name": "redeemableItemDto",
-        "Type": "SonicPoints.Dto.RedeemableItemDto",
+        "Type": "SonicPoints.Dto.SonicPoints.Dto.RedeemableItemDto",
         "IsRequired": true
       }
     ],
@@ -364,6 +396,27 @@
   },
   {
     "ContainingType": "SonicPoints.Controllers.TaskController",
+    "Method": "EditTask",
+    "RelativePath": "api/tasks/{taskId}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "taskId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "SonicPoints.DTOs.EditTaskDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SonicPoints.Controllers.TaskController",
     "Method": "GetTaskById",
     "RelativePath": "api/tasks/{taskId}",
     "HttpMethod": "GET",
@@ -416,23 +469,83 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "SonicPoints.Controllers.TestController",
-    "Method": "Test",
-    "RelativePath": "api/Test/test",
+    "ContainingType": "SonicPoints.Controllers.TaskController",
+    "Method": "GetTasksByProject",
+    "RelativePath": "api/tasks/project/{projectId}",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
-    "Parameters": [],
-    "ReturnTypes": [
+    "Parameters": [
       {
-        "Type": "System.String",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
+        "Name": "projectId",
+        "Type": "System.Int32",
+        "IsRequired": true
       }
-    ]
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SonicPoints.Controllers.TaskController",
+    "Method": "GetTaskAnalytics",
+    "RelativePath": "api/tasks/project/{projectId}/analytics",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "projectId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SonicPoints.Controllers.TaskController",
+    "Method": "GetProjectProgressTrend",
+    "RelativePath": "api/tasks/project/{projectId}/progress-trend",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "projectId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SonicPoints.Controllers.TaskController",
+    "Method": "GetTaskStatusCounts",
+    "RelativePath": "api/tasks/project/{projectId}/status-counts",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "projectId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SonicPoints.Controllers.TaskController",
+    "Method": "ReorderTasks",
+    "RelativePath": "api/tasks/reorder",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "list",
+        "Type": "System.Collections.Generic.List\u00601[[SonicPoints.DTOs.TaskOrderDto, SonicPoints, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
   }
 ]

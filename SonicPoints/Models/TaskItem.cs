@@ -6,10 +6,13 @@ namespace SonicPoints.Models
     {
         public int Id { get; set; }
         public string Title { get; set; }
+        
         public string Description { get; set; }
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public ProjectTaskStatus Status { get; set; }
-        // Use ProjectTaskStatus, not TaskStatus
+
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public TaskPriority Priority { get; set; }
         public int ProjectId { get; set; }
         public Project Project { get; set; }
         public int RewardPoints { get; set; } // Points given when completed
@@ -28,4 +31,11 @@ namespace SonicPoints.Models
         Review,
         Completed
     }
+    public enum TaskPriority
+    {
+        Low = 0,
+        Medium = 1,
+        High = 2
+    }
+
 }
