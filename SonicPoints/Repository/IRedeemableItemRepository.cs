@@ -9,11 +9,11 @@ namespace SonicPoints.Repositories
         // Add a new redeemable item to the database
         Task<RedeemableItem> AddRedeemableItemAsync(RedeemableItem redeemableItem);
 
-        // Get a redeemable item by its ID
+        // Get a redeemable item by its ID (not by project)
         Task<RedeemableItem> GetRedeemableItemByIdAsync(int id);
 
         // Get all redeemable items for a specific project
-        Task<List<RedeemableItem>> GetRedeemableItemsByProjectAsync(int projectId);
+        Task<List<RedeemableItem>> GetRedeemableItemsByProjectId(int projectId);
 
         // Update a redeemable item
         Task<RedeemableItem> UpdateRedeemableItemAsync(RedeemableItem redeemableItem);

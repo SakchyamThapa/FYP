@@ -37,9 +37,18 @@ namespace SonicPoints.Controllers
         {
             try
             {
+                Console.WriteLine("🟢 Received Task Create Request:");
+                Console.WriteLine($"Title: {createTaskDto.Title}");
+                Console.WriteLine($"Priority: {createTaskDto.Priority}");
+                Console.WriteLine($"DueDate: {createTaskDto.DueDate}");
+                Console.WriteLine($"ProjectId: {createTaskDto.ProjectId}");
+                Console.WriteLine($"Points: {createTaskDto.RewardPoints}");
+
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (!await _projectAuthorization.HasProjectRoleAsync(userId, createTaskDto.ProjectId, "Admin", "Manager"))
-                    return Forbid("You are not authorized to create tasks in this project.");
+                    return StatusCode(403, "You are not authorized to create tasks in this project."); // ✅ fixed
+
+
 
                 var task = new TaskItem
                 {
@@ -59,10 +68,11 @@ namespace SonicPoints.Controllers
             }
             catch (Exception ex)
             {
-                // 🔴 Add logging here
+                Console.WriteLine("❌ Task creation failed: " + ex.Message);
                 return StatusCode(500, $"Server error: {ex.Message}");
             }
         }
+
 
 
         // ✅ Update Task Status

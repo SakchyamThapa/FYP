@@ -223,7 +223,18 @@ namespace SonicPoints.Controllers
 
             return Ok("Role updated.");
         }
-        
+        [HttpGet("points/{projectId}")]
+        public async Task<IActionResult> GetUserPoints(int projectId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var points = await _context.ProjectUserPoints
+                .Where(p => p.ProjectId == projectId && p.UserId == userId)
+                .Select(p => p.TotalPoints)
+                .FirstOrDefaultAsync();
+
+            return Ok(new { points });
+        }
+
 
         [HttpDelete("{projectId}/remove-user/{targetUserId}")]
         public async Task<IActionResult> RemoveUserFromProject(int projectId, string targetUserId)

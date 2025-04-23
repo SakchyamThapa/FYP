@@ -13,6 +13,7 @@ namespace SonicPoints.Data
         public DbSet<IdentityUserRole<string>> UserRoles { get; set; }
         public DbSet<IdentityUserLogin<string>> UserLogins { get; set; }
         public DbSet<IdentityRoleClaim<string>> RoleClaims { get; set; }
+       
 
         public DbSet<User> Users { get; set; }
         public DbSet<Project> Projects { get; set; }
@@ -21,6 +22,8 @@ namespace SonicPoints.Data
         public DbSet<Leaderboard> Leaderboards { get; set; }
         public DbSet<RedeemableItem> RedeemableItems { get; set; }
         public DbSet<RedeemHistory> RedeemHistory { get; set; }
+        public DbSet<ProjectUserPoints> ProjectUserPoints { get; set; }
+
         public DbSet<Report> Reports { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

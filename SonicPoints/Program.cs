@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using SonicPoints.Data;
@@ -9,6 +12,7 @@ using SonicPoints.Repositories;
 using SonicPoints.Services;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -58,6 +62,13 @@ builder.Services.AddAuthentication(options =>
 // ------------------ AUTHORIZATION ------------------
 builder.Services.AddAuthorization();
 
+builder.Services
+    .AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
+
 // ------------------ CORS ------------------
 builder.Services.AddCors(options =>
 {
@@ -70,13 +81,23 @@ builder.Services.AddCors(options =>
     });
 });
 
+// ------------------ FORM UPLOAD LIMITS ------------------
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 30 * 1024 * 1024; // 30 MB
+});
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.Limits.MaxRequestBodySize = 30 * 1024 * 1024; // 30 MB
+});
+
 // ------------------ SWAGGER ------------------
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "SonicPoints API", Version = "v1" });
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Description = "JWT Authorization header using Bearer scheme (e.g. 'Bearer {token}')",
+        Description = "JWT Authorization header using the Bearer scheme. Example: 'Bearer {token}'",
         Name = "Authorization",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.Http,
@@ -88,15 +109,25 @@ builder.Services.AddSwaggerGen(c =>
         {
             new OpenApiSecurityScheme
             {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
+                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
             },
             Array.Empty<string>()
         }
     });
+});
+
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    options.InvalidModelStateResponseFactory = context =>
+    {
+        var errors = context.ModelState
+            .Where(e => e.Value.Errors.Count > 0)
+            .ToDictionary(
+                e => e.Key,
+                e => e.Value.Errors.Select(x => x.ErrorMessage).ToArray()
+            );
+        return new BadRequestObjectResult(new { Message = "Validation Failed", Errors = errors });
+    };
 });
 
 // ------------------ DEPENDENCIES ------------------
@@ -104,13 +135,28 @@ builder.Services.AddTransient<IProjectRepository, ProjectRepository>();
 builder.Services.AddTransient<ITaskRepository, TaskRepository>();
 builder.Services.AddTransient<IRewardRepository, RewardRepository>();
 builder.Services.AddTransient<ILeaderboardRepository, LeaderboardRepository>();
+builder.Services.AddTransient<IRedeemableItemRepository, RedeemableItemRepository>();
 builder.Services.AddTransient<IProjectAuthorizationService, ProjectAuthorizationService>();
 
 builder.Services.AddMemoryCache();
-builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddControllers();
 
 var app = builder.Build();
+
+// ------------------ GLOBAL EXCEPTION HANDLING (for large files) ------------------
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next.Invoke();
+    }
+    catch (BadHttpRequestException ex)
+    {
+        context.Response.StatusCode = 413;
+        await context.Response.WriteAsync("Upload failed: File too large or malformed request.");
+    }
+});
 
 // ------------------ ROLE SEEDING ------------------
 async Task EnsureRolesCreatedAsync(WebApplication app)
@@ -135,17 +181,26 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "SonicPoints API v1");
-        c.RoutePrefix = string.Empty; // Swagger at root
+        c.RoutePrefix = string.Empty;
     });
 }
 
 await EnsureRolesCreatedAsync(app);
 
 app.UseHttpsRedirection();
+
+
 app.UseRouting();
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseStaticFiles(); // default wwwroot
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(Directory.GetCurrentDirectory(), "Redeemable Items")),
+    RequestPath = "/Redeemable Items"
+});
 app.MapControllers();
 
 Console.WriteLine("✅ SonicPoints API is running...");
