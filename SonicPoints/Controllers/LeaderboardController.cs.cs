@@ -4,28 +4,40 @@ using Microsoft.Extensions.Caching.Memory;
 using SonicPoints.Dto;
 using SonicPoints.Models;
 using SonicPoints.Repositories;
-using System.Linq;
-using System.Threading.Tasks;
+using SonicPoints.Services;
+using System.Security.Claims;
 
 namespace SonicPoints.Controllers
 {
     [Route("api/leaderboard")]
     [ApiController]
+    [Authorize]
     public class LeaderboardController : ControllerBase
     {
         private readonly ILeaderboardRepository _leaderboardRepository;
         private readonly IMemoryCache _cache;
+        private readonly IProjectAuthorizationService _projectAuthorization;
 
-        public LeaderboardController(ILeaderboardRepository leaderboardRepository, IMemoryCache cache)
+        public LeaderboardController(
+            ILeaderboardRepository leaderboardRepository,
+            IMemoryCache cache,
+            IProjectAuthorizationService projectAuthorization)
         {
             _leaderboardRepository = leaderboardRepository;
             _cache = cache;
+            _projectAuthorization = projectAuthorization;
         }
 
-        //  Get Leaderboard by Project with Pagination and Caching
+        // ✅ Get Leaderboard by Project with Pagination and Caching
         [HttpGet("{projectId}")]
         public async Task<IActionResult> GetLeaderboard(int projectId, int pageNumber = 1, int pageSize = 10)
         {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            var hasAccess = await _projectAuthorization.HasProjectRoleAsync(userId, projectId, "Admin", "Manager", "Checker", "Member");
+            if (!hasAccess)
+                return Forbid("You are not a member of this project.");
+
             string cacheKey = $"leaderboard_{projectId}_page_{pageNumber}_size_{pageSize}";
 
             if (!_cache.TryGetValue(cacheKey, out List<LeaderboardDto> cachedLeaderboard))
@@ -40,7 +52,7 @@ namespace SonicPoints.Controllers
                     totalTasksInProject = Math.Max(totalTasksInProject, 1); // Prevent division by zero
 
                     var pagedLeaderboard = leaderboard
-                        .OrderByDescending(l => l.PointsEarned) // Ensure ranking by points
+                        .OrderByDescending(l => l.PointsEarned)
                         .Skip((pageNumber - 1) * pageSize)
                         .Take(pageSize)
                         .Select((l, index) => new LeaderboardDto
@@ -56,10 +68,8 @@ namespace SonicPoints.Controllers
                         })
                         .ToList();
 
-                    if (pagedLeaderboard.Any()) // Cache only if data exists
-                    {
+                    if (pagedLeaderboard.Any())
                         _cache.Set(cacheKey, pagedLeaderboard, TimeSpan.FromMinutes(10));
-                    }
 
                     return Ok(pagedLeaderboard);
                 }
@@ -72,7 +82,7 @@ namespace SonicPoints.Controllers
             return Ok(cachedLeaderboard);
         }
 
-        // KPI-Based Redeemable Points Calculation
+        // ✅ KPI-Based Redeemable Points Calculation
         private int CalculateKpiPoints(int pointsEarned, int taskCompletionCount, int redeemedPoints, int rank, int totalTasks)
         {
             double basePoints = pointsEarned * 0.5;
