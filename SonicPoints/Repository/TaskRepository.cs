@@ -16,7 +16,7 @@ namespace SonicPoints.Repositories
             _context = context;
         }
 
-        // ✅ Get all tasks by projectId
+        // Get all tasks by projectId
         public async Task<IEnumerable<TaskItem>> GetTasksByProjectIdAsync(int projectId, string userId)
         {
             return await _context.Tasks
@@ -26,7 +26,7 @@ namespace SonicPoints.Repositories
                 .ToListAsync();
         }
 
-        // ✅ Get filtered tasks by status (optional)
+        //  Get filtered tasks by status (optional)
         public async Task<IEnumerable<TaskItem>> GetFilteredTasksAsync(int projectId, string userId, string status = null)
         {
             var query = _context.Tasks
@@ -42,7 +42,7 @@ namespace SonicPoints.Repositories
             return await query.ToListAsync();
         }
 
-        // ✅ Create a new task
+        // Create a new task
         public async Task<TaskItem> CreateTaskAsync(TaskItem task, string userId)
         {
             _context.Tasks.Add(task);
@@ -68,7 +68,7 @@ namespace SonicPoints.Repositories
             return task;
         }
 
-        // ✅ Update task status
+        // Update task status
         public async Task<bool> UpdateTaskStatusAsync(TaskItem task)
         {
             var existingTask = await _context.Tasks.FindAsync(task.Id);
@@ -81,7 +81,7 @@ namespace SonicPoints.Repositories
             return true;
         }
 
-        // ✅ Get task by ID
+        //  Get task by ID
         public async Task<TaskItem> GetTaskByIdAsync(int taskId)
         {
             return await _context.Tasks
@@ -89,7 +89,7 @@ namespace SonicPoints.Repositories
                 .FirstOrDefaultAsync(t => t.Id == taskId);
         }
 
-        // ✅ Delete a task with permission check
+        // Delete a task with permission check
         public async Task<bool> DeleteTaskAsync(int taskId, string userId)
         {
             var task = await _context.Tasks
@@ -125,7 +125,7 @@ namespace SonicPoints.Repositories
                 .ToListAsync();
         }
 
-        // ✅ Save async
+        //  Save async
         public async Task<bool> SaveAsync()
         {
             await _context.SaveChangesAsync();
