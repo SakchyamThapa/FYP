@@ -85,16 +85,19 @@ namespace SonicPoints.Controllers
             var users = await _context.ProjectUsers
                 .Where(pu => pu.ProjectId == projectId)
                 .Include(pu => pu.User)
-                .Select(pu => new {
-                    id = pu.UserId,
-                    name = pu.User.UserName,
-                    email = pu.User.Email,
-                    kpiPoints = pu.RewardPoints
+                .Select(pu => new
+                {
+                    Id = pu.UserId,
+                    Name = pu.User != null ? pu.User.UserName : "Unknown",
+                    Email = pu.User != null ? pu.User.Email : "Unknown",
+                    KpiPoints = pu.RewardPoints,
+                    Role = pu.Role
                 })
                 .ToListAsync();
 
             return Ok(users);
         }
+
 
 
         [HttpGet("{id}")]

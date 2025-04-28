@@ -39,7 +39,7 @@ namespace SonicPoints.DTOs
     public class TaskOrderDto
     {
         public int TaskId { get; set; }
-        public ProjectTaskStatus NewStatus { get; set; }
+        public int NewStatus { get; set; }
     }
 
 

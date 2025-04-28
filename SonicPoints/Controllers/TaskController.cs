@@ -34,27 +34,35 @@ namespace SonicPoints.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateTask([FromBody] CreateTaskDto createTaskDto)
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            if (!await _projectAuthorization.HasProjectRoleAsync(userId, createTaskDto.ProjectId, "Admin", "Manager"))
-                return Forbid("🚫 You do not have permission to add tasks in this project.");
-
-            var task = new TaskItem
+            try
             {
-                Title = createTaskDto.Title,
-                Description = createTaskDto.Description,
-                Status = ProjectTaskStatus.Backlog,
-                Priority = createTaskDto.Priority,
-                ProjectId = createTaskDto.ProjectId,
-                RewardPoints = createTaskDto.RewardPoints,
-                AssignedDate = DateTime.UtcNow,
-                DueDate = createTaskDto.DueDate,
-                UserId = userId
-            };
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            var createdTask = await _taskRepository.CreateTaskAsync(task, userId);
-            return CreatedAtAction(nameof(GetTaskById), new { taskId = createdTask.Id }, createdTask);
+                if (!await _projectAuthorization.HasProjectRoleAsync(userId, createTaskDto.ProjectId, "Admin", "Manager"))
+                    return Forbid("🚫 You do not have permission to add tasks in this project.");
+
+                var task = new TaskItem
+                {
+                    Title = createTaskDto.Title,
+                    Description = createTaskDto.Description,
+                    Status = ProjectTaskStatus.Backlog,
+                    Priority = createTaskDto.Priority,
+                    ProjectId = createTaskDto.ProjectId,
+                    RewardPoints = createTaskDto.RewardPoints,
+                    AssignedDate = DateTime.UtcNow,
+                    DueDate = createTaskDto.DueDate,
+                    UserId = userId
+                };
+
+                var createdTask = await _taskRepository.CreateTaskAsync(task, userId);
+                return CreatedAtAction(nameof(GetTaskById), new { taskId = createdTask.Id }, createdTask);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
+
 
         [HttpPut("{taskId}/status")]
         public async Task<IActionResult> UpdateTaskStatus(int taskId, [FromBody] UpdateTaskDto updateTaskDto)
@@ -79,6 +87,7 @@ namespace SonicPoints.Controllers
 
             return Ok(task);
         }
+
 
         [HttpPost("{taskId}/check")]
         public async Task<IActionResult> CheckTaskCompletion(int taskId)
@@ -164,31 +173,51 @@ namespace SonicPoints.Controllers
         [HttpPost("reorder")]
         public async Task<IActionResult> ReorderTasks([FromBody] List<TaskOrderDto> list)
         {
+            if (list == null || list.Count == 0)
+            {
+                return BadRequest("⚠️ No tasks provided for reordering.");
+            }
+
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var updatedTasks = new List<TaskItem>();
 
             foreach (var item in list)
             {
-                var task = await _taskRepository.GetTaskByIdAsync(item.TaskId);
-                if (task == null) continue;
+                if (item == null || item.TaskId <= 0)
+                    continue;
 
-                if (item.NewStatus == ProjectTaskStatus.InProgress || item.NewStatus == ProjectTaskStatus.Review)
+                var task = await _taskRepository.GetTaskByIdAsync(item.TaskId);
+
+                if (task == null)
+                    continue;
+
+                // ✅ Safe cast int -> enum
+                if (!Enum.IsDefined(typeof(ProjectTaskStatus), item.NewStatus))
+                {
+                    return BadRequest($"⚠️ Invalid status value {item.NewStatus} for task {item.TaskId}.");
+                }
+
+                task.Status = (ProjectTaskStatus)item.NewStatus;
+
+                if (task.Status == ProjectTaskStatus.InProgress || task.Status == ProjectTaskStatus.Review)
                 {
                     task.UserId = userId;
                 }
-
-                if (item.NewStatus == ProjectTaskStatus.Backlog)
+                else if (task.Status == ProjectTaskStatus.Backlog)
                 {
                     task.UserId = null;
                 }
 
-                task.Status = item.NewStatus;
                 await _taskRepository.UpdateTaskAsync(task);
                 updatedTasks.Add(task);
             }
 
+            await _taskRepository.SaveAsync();
+
             return Ok(updatedTasks);
         }
+
+
 
         [HttpGet("project/{projectId}/progress-trend")]
         public async Task<IActionResult> GetProjectProgressTrend(int projectId)
@@ -249,5 +278,28 @@ namespace SonicPoints.Controllers
 
             return Ok(task);
         }
+        [HttpDelete("{taskId}")]
+        public async Task<IActionResult> DeleteTask(int taskId)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            var task = await _taskRepository.GetTaskByIdAsync(taskId);
+
+            if (task == null)
+                return NotFound("❌ Task not found.");
+
+            var allowed = await _projectAuthorization.HasProjectRoleAsync(userId, task.ProjectId, "Admin", "Manager");
+            if (!allowed)
+                return Forbid("⛔ You do not have permission to delete tasks.");
+
+            var deleted = await _taskRepository.DeleteTaskAsync(taskId, userId); // ✅ Pass both taskId and userId here
+
+            if (!deleted)
+                return BadRequest("❌ Failed to delete task.");
+
+            return NoContent();
+        }
+
+
     }
 }

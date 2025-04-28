@@ -511,6 +511,22 @@
   },
   {
     "ContainingType": "SonicPoints.Controllers.TaskController",
+    "Method": "DeleteTask",
+    "RelativePath": "api/tasks/{taskId}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "taskId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SonicPoints.Controllers.TaskController",
     "Method": "CheckTaskCompletion",
     "RelativePath": "api/tasks/{taskId}/check",
     "HttpMethod": "POST",
