@@ -492,7 +492,7 @@
     "Parameters": [
       {
         "Name": "redeemDto",
-        "Type": "SonicPoints.Dto.RedeemDto",
+        "Type": "SonicPoints.Dto.RedeemRequestDto",
         "IsRequired": true
       }
     ],

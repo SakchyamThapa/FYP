@@ -754,17 +754,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RedeemDto"
+                "$ref": "#/components/schemas/RedeemRequestDto"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/RedeemDto"
+                "$ref": "#/components/schemas/RedeemRequestDto"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/RedeemDto"
+                "$ref": "#/components/schemas/RedeemRequestDto"
               }
             }
           }
@@ -1283,28 +1283,12 @@
         },
         "additionalProperties": false
       },
-      "RedeemDto": {
+      "RedeemRequestDto": {
         "type": "object",
         "properties": {
           "redeemableItemId": {
             "type": "integer",
             "format": "int32"
-          },
-          "redeemableItemName": {
-            "type": "string",
-            "nullable": true
-          },
-          "pointsUsed": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "redeemedAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "userId": {
-            "type": "string",
-            "nullable": true
           },
           "projectId": {
             "type": "integer",

@@ -113,10 +113,23 @@ namespace SonicPoints.Repositories
 
         public async Task<bool> UpdateTaskAsync(TaskItem task)
         {
-            _context.Tasks.Update(task);
+            var existingTask = await _context.Tasks.FindAsync(task.Id);
+            if (existingTask == null)
+                return false;
+
+            existingTask.Title = task.Title ?? existingTask.Title;
+            existingTask.Description = task.Description ?? existingTask.Description;
+            existingTask.Priority = task.Priority;
+            existingTask.RewardPoints = task.RewardPoints;
+            existingTask.DueDate = task.DueDate;
+            existingTask.Status = task.Status;
+
+           
+
             await _context.SaveChangesAsync();
             return true;
         }
+
 
 
         public async Task<IEnumerable<TaskItem>> GetTasksByProjectIdAsync(int projectId)

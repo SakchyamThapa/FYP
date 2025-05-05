@@ -40,7 +40,7 @@ namespace SonicPoints.Controllers
 
         // ✅ Redeem a reward
         [HttpPost("redeem")]
-        public async Task<IActionResult> RedeemReward([FromBody] RedeemDto redeemDto)
+        public async Task<IActionResult> RedeemReward([FromBody] RedeemRequestDto redeemDto)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -51,18 +51,27 @@ namespace SonicPoints.Controllers
             if (redeemableItem == null)
                 return NotFound("Reward item not found for this project.");
 
-            // ✅ Fetch user project points
             var userPointsEntry = await _context.ProjectUserPoints
                 .FirstOrDefaultAsync(p => p.UserId == userId && p.ProjectId == redeemDto.ProjectId);
 
             if (userPointsEntry == null || userPointsEntry.TotalPoints < redeemableItem.Cost)
                 return BadRequest("Not enough points to redeem this reward.");
 
-            // ✅ Deduct points from ProjectUserPoints
+            // Deduct from user points
             userPointsEntry.TotalPoints -= redeemableItem.Cost;
             await _context.SaveChangesAsync();
 
-            // ✅ Log redemption
+            // Also deduct from leaderboard (if exists)
+            var leaderboardEntry = await _context.Leaderboards
+                .FirstOrDefaultAsync(l => l.UserId == userId && l.Task.ProjectId == redeemDto.ProjectId);
+
+            if (leaderboardEntry != null)
+            {
+                leaderboardEntry.RedeemedPoints += redeemableItem.Cost;
+                await _context.SaveChangesAsync();
+            }
+
+            // Log redemption
             var redeemHistory = new RedeemHistory
             {
                 UserId = userId,
@@ -80,6 +89,7 @@ namespace SonicPoints.Controllers
                 remainingPoints = userPointsEntry.TotalPoints
             });
         }
+
 
         // ✅ Get Redeemed Rewards History (project-admin only)
         [HttpGet("redeemed/{projectId}")]

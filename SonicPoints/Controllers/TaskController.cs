@@ -195,10 +195,17 @@ namespace SonicPoints.Controllers
 
                 task.Status = (ProjectTaskStatus)item.NewStatus;
 
-                if (task.Status == ProjectTaskStatus.InProgress || task.Status == ProjectTaskStatus.Review)
-                    task.UserId = userId;
+              
+                if (task.Status == ProjectTaskStatus.InProgress || task.Status == ProjectTaskStatus.Review || task.Status == ProjectTaskStatus.Completed)
+                {
+                    if (string.IsNullOrEmpty(task.UserId))
+                        task.UserId = userId; 
+                }
                 else if (task.Status == ProjectTaskStatus.Backlog)
+                {
                     task.UserId = null;
+                }
+
 
                 await _taskRepository.UpdateTaskAsync(task);
                 updatedTasks.Add(task);
@@ -216,17 +223,20 @@ namespace SonicPoints.Controllers
                 return Forbid();
 
             var tasks = await _taskRepository.GetTasksByProjectIdAsync(projectId);
+
             var trend = tasks
                 .Where(t => t.Status == ProjectTaskStatus.Completed)
-                .GroupBy(t => t.AssignedDate.Date)
+                .GroupBy(t => t.AssignedDate.Date) 
                 .OrderBy(g => g.Key)
                 .Select(g => new {
-                    Date = g.Key.ToString("yyyy-MM-dd"),
-                    Count = g.Count()
+                    date = g.Key.ToString("yyyy-MM-dd"), 
+                    count = g.Count()
                 });
 
             return Ok(trend);
         }
+
+
 
         [HttpGet("project/{projectId}/analytics")]
         public async Task<IActionResult> GetTaskAnalytics(int projectId)
@@ -296,13 +306,24 @@ namespace SonicPoints.Controllers
                 return Forbid("⛔ You do not have access to this project.");
 
             var tasks = await _taskRepository.GetTasksByProjectIdAsync(projectId);
-            return Ok(new
+
+            var result = new Dictionary<string, int>
             {
-                Backlog = tasks.Count(t => t.Status == ProjectTaskStatus.Backlog),
-                InProgress = tasks.Count(t => t.Status == ProjectTaskStatus.InProgress),
-                Review = tasks.Count(t => t.Status == ProjectTaskStatus.Review),
-                Completed = tasks.Count(t => t.Status == ProjectTaskStatus.Completed)
-            });
+                ["Backlog"] = 0,
+                ["InProgress"] = 0,
+                ["Review"] = 0,
+                ["Completed"] = 0
+            };
+
+            foreach (var task in tasks)
+            {
+                var statusName = task.Status.ToString();
+                if (result.ContainsKey(statusName))
+                    result[statusName]++;
+            }
+
+            return Ok(result);
         }
+
     }
 }

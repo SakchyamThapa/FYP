@@ -8,4 +8,9 @@
         public DateTime LastUpdated { get; set; }
         public string User { get; set; }
     }
+    public class RedeemRequestDto
+    {
+        public int RedeemableItemId { get; set; }
+        public int ProjectId { get; set; }
+    }
 }
