@@ -62,6 +62,38 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "SonicPoints.Controllers.FeedbackController",
+    "Method": "GetAllFeedbackForProject",
+    "RelativePath": "api/feedback/project/{projectId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "projectId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SonicPoints.Controllers.FeedbackController",
+    "Method": "SubmitFeedback",
+    "RelativePath": "api/feedback/submit",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "SonicPoints.DTOs.FeedbackDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "SonicPoints.Controllers.LeaderboardController",
     "Method": "GetLeaderboard",
     "RelativePath": "api/leaderboard/{projectId}",
@@ -397,6 +429,32 @@
     "Method": "GetRedeemableItemsByProjectId",
     "RelativePath": "api/redeemableitems/project/{projectId}",
     "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "projectId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SonicPoints.Controllers.ReportController",
+    "Method": "GenerateReport",
+    "RelativePath": "api/reports/generate",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SonicPoints.Controllers.ReportController",
+    "Method": "GenerateProjectReport",
+    "RelativePath": "api/reports/project/{projectId}",
+    "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [

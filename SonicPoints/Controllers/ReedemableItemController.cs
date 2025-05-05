@@ -24,11 +24,11 @@ namespace SonicPoints.Controllers
         public RedeemableItemController(
             IRedeemableItemRepository redeemableItemRepository,
             IProjectAuthorizationService projectAuthorization,
-            AppDbContext context) 
+            AppDbContext context)
         {
             _redeemableItemRepository = redeemableItemRepository;
             _projectAuthorization = projectAuthorization;
-            _context = context; 
+            _context = context;
         }
 
 
@@ -36,7 +36,7 @@ namespace SonicPoints.Controllers
 
         [HttpPost("CreateRedeemableItem")]
         [RequestSizeLimit(30 * 1024 * 1024)]
-        
+
         public async Task<IActionResult> CreateRedeemableItem([FromForm] RedeemableItemDto dto)
         {
             try
@@ -84,7 +84,7 @@ namespace SonicPoints.Controllers
                 return StatusCode(500, $"Unexpected error occurred: {ex.Message}");
             }
         }
-       
+
 
         [HttpGet("project/{projectId}")]
         public async Task<IActionResult> GetRedeemableItemsByProjectId(int projectId)

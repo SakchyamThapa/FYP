@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+
 using Microsoft.EntityFrameworkCore;
 using SonicPoints.Data;
 using SonicPoints.Dto;
@@ -23,19 +24,19 @@ namespace SonicPoints.Controllers
         private readonly UserManager<User> _userManager;
         private readonly IProjectAuthorizationService _projectAuthorization;
         private readonly AppDbContext _context;
-      
+
 
         public ProjectController(
             IProjectRepository projectRepository,
             UserManager<User> userManager,
             IProjectAuthorizationService projectAuthorization,
-            
+
             AppDbContext context)
         {
             _projectRepository = projectRepository;
             _userManager = userManager;
             _projectAuthorization = projectAuthorization;
-           
+
             _context = context;
         }
         [HttpGet("{projectId}/my-role")]
@@ -67,7 +68,7 @@ namespace SonicPoints.Controllers
                 Name = p.Name,
                 Description = p.Description,
                 DueDate = p.DueDate,
-                ProjectStatus = p.ProjectStatus,
+                ProjectStatus = p.ComputedProjectStatus,
                 Progress = p.Progress
             });
 
@@ -115,7 +116,7 @@ namespace SonicPoints.Controllers
                 Name = project.Name,
                 Description = project.Description,
                 DueDate = project.DueDate,
-                ProjectStatus = project.ProjectStatus,
+                ProjectStatus = project.ComputedProjectStatus,
                 Progress = project.Progress
             };
 

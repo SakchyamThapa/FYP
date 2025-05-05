@@ -1,9 +1,17 @@
-﻿namespace SonicPoints.DTOs
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace SonicPoints.DTOs
 {
     public class AssignUserRoleDto
     {
+        [Required]
         public string UserId { get; set; }
-        public string AdminId { get; set; }  // AdminId of the current user performing the role assignment
-        public string Role { get; set; }  // Role to assign (Admin, Manager, Member)
+
+        [Required]
+        public string AdminId { get; set; }
+
+        [Required]
+        [RegularExpression("Admin|Manager|Checker|Member", ErrorMessage = "Invalid role.")]
+        public string Role { get; set; }
     }
 }

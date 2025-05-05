@@ -103,6 +103,60 @@
         }
       }
     },
+    "/api/feedback/submit": {
+      "post": {
+        "tags": [
+          "Feedback"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeedbackDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeedbackDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeedbackDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/feedback/project/{projectId}": {
+      "get": {
+        "tags": [
+          "Feedback"
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
     "/api/leaderboard/{projectId}": {
       "get": {
         "tags": [
@@ -656,6 +710,41 @@
         }
       }
     },
+    "/api/reports/generate": {
+      "post": {
+        "tags": [
+          "Report"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/reports/project/{projectId}": {
+      "post": {
+        "tags": [
+          "Report"
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
     "/api/rewards/redeem": {
       "post": {
         "tags": [
@@ -814,29 +903,6 @@
         "parameters": [
           {
             "name": "taskId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success"
-          }
-        }
-      }
-    },
-    "/api/tasks/project/{projectId}/status-counts": {
-      "get": {
-        "tags": [
-          "Task"
-        ],
-        "parameters": [
-          {
-            "name": "projectId",
             "in": "path",
             "required": true,
             "schema": {
@@ -1044,6 +1110,29 @@
           }
         }
       }
+    },
+    "/api/tasks/project/{projectId}/status-counts": {
+      "get": {
+        "tags": [
+          "Task"
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1089,10 +1178,13 @@
         "type": "object",
         "properties": {
           "title": {
-            "minLength": 1,
+            "maxLength": 100,
+            "minLength": 0,
             "type": "string"
           },
           "description": {
+            "maxLength": 1000,
+            "minLength": 0,
             "type": "string",
             "nullable": true
           },
@@ -1113,19 +1205,27 @@
           },
           "dueDate": {
             "type": "string",
-            "format": "date-time"
+            "format": "date"
           }
         },
         "additionalProperties": false
       },
       "EditTaskDto": {
+        "required": [
+          "dueDate",
+          "priority",
+          "title"
+        ],
         "type": "object",
         "properties": {
           "title": {
-            "type": "string",
-            "nullable": true
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string"
           },
           "description": {
+            "maxLength": 1000,
+            "minLength": 0,
             "type": "string",
             "nullable": true
           },
@@ -1134,7 +1234,37 @@
           },
           "dueDate": {
             "type": "string",
-            "format": "date-time"
+            "format": "date"
+          },
+          "rewardPoints": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "FeedbackDto": {
+        "type": "object",
+        "properties": {
+          "fullName": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true
+          },
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "rating": {
+            "type": "integer",
+            "format": "int32"
           }
         },
         "additionalProperties": false
@@ -1202,6 +1332,9 @@
         "additionalProperties": false
       },
       "TaskOrderDto": {
+        "required": [
+          "taskId"
+        ],
         "type": "object",
         "properties": {
           "taskId": {
@@ -1209,6 +1342,8 @@
             "format": "int32"
           },
           "newStatus": {
+            "maximum": 3,
+            "minimum": 0,
             "type": "integer",
             "format": "int32"
           }
@@ -1245,6 +1380,8 @@
         "type": "object",
         "properties": {
           "status": {
+            "maximum": 3,
+            "minimum": 0,
             "type": "integer",
             "format": "int32"
           }

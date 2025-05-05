@@ -5,7 +5,6 @@ using SonicPoints.Models;
 using SonicPoints.Repositories;
 using SonicPoints.Services;
 using System.Security.Claims;
-using System.Threading.Tasks;
 
 namespace SonicPoints.Controllers
 {
@@ -31,6 +30,20 @@ namespace SonicPoints.Controllers
             _projectAuthorization = projectAuthorization;
         }
 
+        private TaskDto MapToDto(TaskItem t) => new TaskDto
+        {
+            Id = t.Id,
+            Title = t.Title,
+            Description = t.Description,
+            Status = t.Status.ToString(),
+            Priority = t.Priority.ToString(),
+            ProjectId = t.ProjectId,
+            RewardPoints = t.RewardPoints,
+            DueDate = t.DueDate,
+            AssignedUserId = t.UserId,
+            AssignedUserName = t.User?.UserName
+        };
+
         [HttpPost]
         public async Task<IActionResult> CreateTask([FromBody] CreateTaskDto createTaskDto)
         {
@@ -55,14 +68,13 @@ namespace SonicPoints.Controllers
                 };
 
                 var createdTask = await _taskRepository.CreateTaskAsync(task, userId);
-                return CreatedAtAction(nameof(GetTaskById), new { taskId = createdTask.Id }, createdTask);
+                return CreatedAtAction(nameof(GetTaskById), new { taskId = createdTask.Id }, MapToDto(createdTask));
             }
             catch (Exception ex)
             {
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
-
 
         [HttpPut("{taskId}/status")]
         public async Task<IActionResult> UpdateTaskStatus(int taskId, [FromBody] UpdateTaskDto updateTaskDto)
@@ -85,9 +97,8 @@ namespace SonicPoints.Controllers
             if (!updated)
                 return BadRequest("❌ Failed to update task status.");
 
-            return Ok(task);
+            return Ok(MapToDto(task));
         }
-
 
         [HttpPost("{taskId}/check")]
         public async Task<IActionResult> CheckTaskCompletion(int taskId)
@@ -127,56 +138,45 @@ namespace SonicPoints.Controllers
             return Ok("✅ Task completed and points awarded.");
         }
 
-        [HttpGet("project/{projectId}/status-counts")]
-        public async Task<IActionResult> GetTaskStatusCounts(int projectId)
-        {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            if (!await _projectAuthorization.HasProjectRoleAsync(userId, projectId, "Admin", "Manager", "Checker", "Member"))
-                return Forbid("⛔ You do not have access to this project.");
-
-            var tasks = await _taskRepository.GetTasksByProjectIdAsync(projectId);
-            return Ok(new
-            {
-                Backlog = tasks.Count(t => t.Status == ProjectTaskStatus.Backlog),
-                InProgress = tasks.Count(t => t.Status == ProjectTaskStatus.InProgress),
-                Review = tasks.Count(t => t.Status == ProjectTaskStatus.Review),
-                Completed = tasks.Count(t => t.Status == ProjectTaskStatus.Completed)
-            });
-        }
-
         [HttpPut("{taskId}")]
         public async Task<IActionResult> EditTask(int taskId, [FromBody] EditTaskDto dto)
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var task = await _taskRepository.GetTaskByIdAsync(taskId);
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var task = await _taskRepository.GetTaskByIdAsync(taskId);
 
-            if (task == null)
-                return NotFound("❌ Task not found.");
+                if (task == null)
+                    return NotFound(" Task not found.");
 
-            var allowed = await _projectAuthorization.HasProjectRoleAsync(userId, task.ProjectId, "Admin", "Manager");
-            if (!allowed)
-                return Forbid("⛔ You do not have permission to edit tasks.");
+                var allowed = await _projectAuthorization.HasProjectRoleAsync(userId, task.ProjectId, "Admin", "Manager");
+                if (!allowed)
+                    return Forbid(" You do not have permission to edit tasks.");
 
-            task.Title = dto.Title;
-            task.Description = dto.Description;
-            task.Priority = dto.Priority;
-            task.DueDate = dto.DueDate;
+                task.Title = dto.Title;
+                task.Description = dto.Description;
+                task.Priority = dto.Priority;
+                task.DueDate = dto.DueDate;
+                task.RewardPoints = dto.RewardPoints;
 
-            var updated = await _taskRepository.UpdateTaskAsync(task);
-            if (!updated)
-                return BadRequest("❌ Failed to update task.");
+                var updated = await _taskRepository.UpdateTaskAsync(task);
+                if (!updated)
+                    return BadRequest(" Failed to update task.");
 
-            return Ok(task);
+                return Ok(MapToDto(task));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("EditTask error: " + ex.Message);
+                return StatusCode(500, " Server error: " + ex.Message);
+            }
         }
 
         [HttpPost("reorder")]
         public async Task<IActionResult> ReorderTasks([FromBody] List<TaskOrderDto> list)
         {
             if (list == null || list.Count == 0)
-            {
                 return BadRequest("⚠️ No tasks provided for reordering.");
-            }
 
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var updatedTasks = new List<TaskItem>();
@@ -187,37 +187,26 @@ namespace SonicPoints.Controllers
                     continue;
 
                 var task = await _taskRepository.GetTaskByIdAsync(item.TaskId);
-
                 if (task == null)
                     continue;
 
-                // ✅ Safe cast int -> enum
                 if (!Enum.IsDefined(typeof(ProjectTaskStatus), item.NewStatus))
-                {
                     return BadRequest($"⚠️ Invalid status value {item.NewStatus} for task {item.TaskId}.");
-                }
 
                 task.Status = (ProjectTaskStatus)item.NewStatus;
 
                 if (task.Status == ProjectTaskStatus.InProgress || task.Status == ProjectTaskStatus.Review)
-                {
                     task.UserId = userId;
-                }
                 else if (task.Status == ProjectTaskStatus.Backlog)
-                {
                     task.UserId = null;
-                }
 
                 await _taskRepository.UpdateTaskAsync(task);
                 updatedTasks.Add(task);
             }
 
             await _taskRepository.SaveAsync();
-
-            return Ok(updatedTasks);
+            return Ok(updatedTasks.Select(MapToDto));
         }
-
-
 
         [HttpGet("project/{projectId}/progress-trend")]
         public async Task<IActionResult> GetProjectProgressTrend(int projectId)
@@ -266,7 +255,7 @@ namespace SonicPoints.Controllers
                 return Forbid("⛔ You do not have permission to view tasks in this project.");
 
             var tasks = await _taskRepository.GetTasksByProjectIdAsync(projectId);
-            return Ok(tasks);
+            return Ok(tasks.Select(MapToDto));
         }
 
         [HttpGet("{taskId}")]
@@ -276,13 +265,13 @@ namespace SonicPoints.Controllers
             if (task == null)
                 return NotFound("❌ Task not found.");
 
-            return Ok(task);
+            return Ok(MapToDto(task));
         }
+
         [HttpDelete("{taskId}")]
         public async Task<IActionResult> DeleteTask(int taskId)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
             var task = await _taskRepository.GetTaskByIdAsync(taskId);
 
             if (task == null)
@@ -292,14 +281,28 @@ namespace SonicPoints.Controllers
             if (!allowed)
                 return Forbid("⛔ You do not have permission to delete tasks.");
 
-            var deleted = await _taskRepository.DeleteTaskAsync(taskId, userId); // ✅ Pass both taskId and userId here
-
+            var deleted = await _taskRepository.DeleteTaskAsync(taskId, userId);
             if (!deleted)
                 return BadRequest("❌ Failed to delete task.");
 
             return NoContent();
         }
 
+        [HttpGet("project/{projectId}/status-counts")]
+        public async Task<IActionResult> GetTaskStatusCounts(int projectId)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!await _projectAuthorization.HasProjectRoleAsync(userId, projectId, "Admin", "Manager", "Checker", "Member"))
+                return Forbid("⛔ You do not have access to this project.");
 
+            var tasks = await _taskRepository.GetTasksByProjectIdAsync(projectId);
+            return Ok(new
+            {
+                Backlog = tasks.Count(t => t.Status == ProjectTaskStatus.Backlog),
+                InProgress = tasks.Count(t => t.Status == ProjectTaskStatus.InProgress),
+                Review = tasks.Count(t => t.Status == ProjectTaskStatus.Review),
+                Completed = tasks.Count(t => t.Status == ProjectTaskStatus.Completed)
+            });
+        }
     }
 }

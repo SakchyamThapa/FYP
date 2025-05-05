@@ -86,6 +86,7 @@ namespace SonicPoints.Repositories
         {
             return await _context.Tasks
                 .Include(t => t.Project)
+                .Include(t => t.User)
                 .FirstOrDefaultAsync(t => t.Id == taskId);
         }
 

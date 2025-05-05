@@ -13,7 +13,10 @@ namespace SonicPoints.Data
         public DbSet<IdentityUserRole<string>> UserRoles { get; set; }
         public DbSet<IdentityUserLogin<string>> UserLogins { get; set; }
         public DbSet<IdentityRoleClaim<string>> RoleClaims { get; set; }
-       
+
+        public DbSet<Feedback> Feedbacks { get; set; }
+
+
 
         public DbSet<User> Users { get; set; }
         public DbSet<Project> Projects { get; set; }
